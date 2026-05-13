@@ -34,6 +34,7 @@
         color: #0c0302;
         margin: 0;
         line-height: 1.5;
+        overflow: hidden;
       }
       .dish-card {
         transition: all 0.3s ease;
@@ -64,11 +65,14 @@
       .history-card {
         background: white;
         border-radius: 1rem;
-        padding: 1rem;
+        padding: 0.5rem;
         border: 1px solid #eee;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         position: relative;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .history-card:last-child {
+        margin-bottom: 0;
       }
       .btn-pulse {
         animation: pulse 2s infinite;
@@ -88,6 +92,50 @@
         background-color: #ff5600;
         color: white;
         box-shadow: 0 4px 12px rgba(255, 86, 0, 0.2);
+      }
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-content {
+        background: white;
+        border-radius: 1rem;
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 2rem;
+        position: relative;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      .modal-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0c0302;
+      }
+      .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #777;
+      }
+      .chart-container {
+        height: 500px;
+        width: 100%;
       }
     </style>
   </head>
@@ -121,6 +169,11 @@
                 统计区
               </button>
             </nav>
+            <button
+              @click="openStatsModal"
+              class="px-4 py-2 rounded-full bg-primary text-white transition-colors text-sm font-bold flex items-center gap-2">
+              查看统计
+            </button>
             <div class="hidden md:flex items-end">
               <span
                 class="text-sm font-bold text-primary uppercase tracking-widest"
@@ -138,6 +191,17 @@
           </div>
         </div>
       </header>
+
+      <!-- 弹窗展示统计图表 -->
+      <div v-if="showStatsModal" class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title">全班最喜欢的搭配统计</h3>
+            <button @click="closeStatsModal" class="close-modal">×</button>
+          </div>
+          <div id="statsChart" class="chart-container"></div>
+        </div>
+      </div>
 
       <!-- 实验区 -->
       <main
@@ -158,31 +222,34 @@
                 >数据来源：人教版数学四年级下册</span
               >
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               <div
                 v-for="dish in dishes"
                 :key="dish.id"
                 @click="toggleDish(dish.id)"
-                :class="['dish-card bg-white rounded-3xl p-5 cursor-pointer border-2 shadow-sm', selected.includes(dish.id) ? 'selected border-primary' : 'border-transparent']">
+                :class="['dish-card bg-white rounded-3xl p-2 cursor-pointer border-2 shadow-sm', selected.includes(dish.id) ? 'selected border-primary' : 'border-transparent']">
                 <div
-                  class="aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-gray-50">
+                  class="aspect-[1/1] rounded-2xl overflow-hidden mb-4 bg-gray-50">
                   <img
                     :src="dish.img"
                     class="w-full h-full object-cover"
                     :alt="dish.name" />
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="">
                   <div>
-                    <h3 class="font-bold text-lg mb-2">{{ dish.name }}</h3>
+                    <div class="flex items-center justify-between">
+                      <h3 class="font-bold text-lg mb-2">{{ dish.name }}</h3>
+                      <div
+                        class="w-8 h-8 rounded-full border-2 border-gray-100 flex items-center justify-center transition-all">
+                        <div
+                          :class="['w-4 h-4 bg-primary rounded-full transition-transform', selected.includes(dish.id) ? '' : 'scale-0']"
+                          :style="{ transform: selected.includes(dish.id) ? 'scale(1)' : 'scale(0)' }"></div>
+                      </div>
+                    </div>
                     <p class="text-medium text-secondary font-medium">
-                      🔥 {{ dish.energy }}kJ &nbsp; · &nbsp;🥩 {{ dish.fat }}g
+                      🔥{{ dish.energy }}kJ · 🥩{{ dish.fat }}g
                     </p>
-                  </div>
-                  <div
-                    class="w-8 h-8 rounded-full border-2 border-gray-100 flex items-center justify-center transition-all">
-                    <div
-                      :class="['w-4 h-4 bg-primary rounded-full transition-transform', selected.includes(dish.id) ? '' : 'scale-0']"
-                      :style="{ transform: selected.includes(dish.id) ? 'scale(1)' : 'scale(0)' }"></div>
                   </div>
                 </div>
               </div>
@@ -321,23 +388,66 @@
         v-show="currentTab === 'stats'"
         class="flex-1 flex overflow-hidden"
         style="height: calc(100vh - 80px)">
-        <section class="flex-1 p-8 flex flex-col">
+        <section class="flex-1 p-4 flex flex-col">
           <div class="max-w-5xl mx-auto w-full flex-1 flex flex-col">
-            <h2 class="text-xl font-bold flex items-center gap-2 mb-8">
+            <h2 class="text-xl font-bold flex items-center gap-2 mb-4">
               <span
                 class="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm"
                 >03</span
               >
-              全班最喜欢的搭配统计（动态刷新）
+              投票结果
             </h2>
             <div
-              class="flex-1 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative">
-              <div id="mainChart" class="w-full h-full"></div>
+              class="flex-1 bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
               <div
-                v-if="candidates.length === 0"
-                class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 bg-white/80 rounded-3xl">
-                <span class="text-6xl mb-4">📊</span>
-                <p>暂无统计数据，请先在实验区保存方案并投票</p>
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                v-if="candidates.length">
+                <div
+                  v-for="c in candidates"
+                  :key="c.id"
+                  class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                  <div class="font-bold text-md mb-3 text-gray-800">
+                    {{ c.names }}
+                  </div>
+                  <div
+                    class="text-sm text-secondary mb-3 flex justify-between align-center">
+                    <span>🔥 {{ c.energy }}kJ · 🥩 {{ c.fat }}g</span>
+                    <button
+                      @click="removeCandidate(c.id)"
+                      class="py-1 bg-red-500 text-white rounded-md text-xs font-bold hover:bg-red-600 transition-all shadow-sm"
+                      style="width: 48px">
+                      删除
+                    </button>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      @click="voteFor(c.id, 'male')"
+                      class="flex-1 bg-blue-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-blue-600 transition-all shadow-sm">
+                      ♂男生喜欢 {{ c.male_votes }}
+                    </button>
+                    <button
+                      @click="voteFor(c.id, 'female')"
+                      class="flex-1 bg-pink-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-pink-600 transition-all shadow-sm">
+                      ♀女生喜欢 {{ c.female_votes }}
+                    </button>
+                    <button
+                      class="flex-1 bg-primary text-white py-2 rounded-lg text-xs font-bold transition-all shadow-sm">
+                      总数 {{ c.male_votes +c.female_votes }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="text-gray-300"
+                v-else
+                style="
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  width: 100;
+                  height: 100%;
+                ">
+                还没有候选方案哦
               </div>
             </div>
           </div>
@@ -345,17 +455,13 @@
         <aside
           class="w-96 bg-white border-l border-gray-100 shadow-2xl flex flex-col"
           style="flex-shrink: 0">
-          <div class="p-8 flex-1 overflow-y-auto custom-scrollbar">
-            <h2 class="text-xl font-bold flex items-center gap-2 mb-8">
+          <div class="p-4 flex-1 overflow-y-auto custom-scrollbar">
+            <h2 class="text-xl font-bold flex items-center gap-2 mb-4">
               <span
                 class="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm"
                 >04</span
               >
-              候选搭配方案
-              <span
-                class="ml-auto text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full"
-                >⏱️ 自动刷新中</span
-              >
+              Top6的搭配方案
             </h2>
             <div
               v-if="loading && !silentPolling"
@@ -363,47 +469,26 @@
               加载中...
             </div>
             <div
-              v-else-if="candidates.length === 0"
+              v-else-if="topSixCandidates.length === 0"
               class="py-20 text-center text-gray-300">
               <p class="text-sm">还没有候选方案哦</p>
             </div>
-            <div v-for="c in candidates" :key="c.id" class="history-card">
-              <button
-                @click="removeCandidate(c.id)"
-                class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <div class="font-bold text-sm mb-2 pr-6 text-gray-800">
-                {{ c.names }}
-              </div>
-              <div class="flex justify-between items-center text-xs mb-4">
-                <span class="text-secondary"
-                  >🔥 {{ c.energy }}kJ | 🥩 {{ c.fat }}g</span
+            <div v-for="c in topSixCandidates" :key="c.id" class="history-card">
+              <div class="mb-2 flex justify-between">
+                <span class="font-bold text-sm pr-6 text-gray-800">
+                  {{ c.names }}</span
                 >
-                <span class="text-green-600 font-bold">达标</span>
+                <span class="text-green-600 text-sm font-bold">达标</span>
               </div>
-              <div class="flex gap-2">
-                <button
-                  @click="voteFor(c.id, 'male')"
-                  class="flex-1 bg-blue-500 text-white py-2 rounded-xl text-xs font-bold hover:bg-blue-600 transition-all shadow-sm">
-                  ♂ 男 ({{ c.male_votes }})
-                </button>
-                <button
-                  @click="voteFor(c.id, 'female')"
-                  class="flex-1 bg-pink-500 text-white py-2 rounded-xl text-xs font-bold hover:bg-pink-600 transition-all shadow-sm">
-                  ♀ 女 ({{ c.female_votes }})
-                </button>
+              <div class="flex justify-between items-center text-xs mb-2">
+                <span class="text-secondary"
+                  >🔥 {{ c.energy }}kJ · 🥩 {{ c.fat }}g</span
+                >
+              </div>
+              <div class="flex justify-between text-sm">
+                <span>♂ {{ c.male_votes }}</span>
+                <span>♀ {{ c.female_votes }}</span>
+                <span class="font-bold">总计: {{ c.total_votes }}</span>
               </div>
             </div>
           </div>
@@ -426,7 +511,9 @@
           animatedEnergy: 0,
           animatedFat: 0,
           chartInstance: null,
+          statsChartInstance: null,
           audioPlayed: false,
+          showStatsModal: false,
           // 轮询配置 (2秒，可自由调整)
           pollIntervalMs: 2000,
           pollingTimer: null, // 递归 setTimeout id
@@ -434,75 +521,75 @@
           dishes: [
             {
               id: 1,
-              name: '炸鸡排',
+              name: '1炸鸡排',
               energy: 1254,
               fat: 19,
               protein: 20,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/oK56wwRyqRESwZ92R2EMz5.jpg'
+              img: './images/炸鸡排.png'
             },
             {
               id: 2,
-              name: '西红柿炒鸡蛋',
+              name: '2西红柿炒鸡蛋',
               energy: 899,
               fat: 15,
               protein: 11,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/vKqrXD6dvZV3w3Nu4wNNLM.jpg'
+              img: './images/西红柿炒鸡蛋.png'
             },
             {
               id: 3,
-              name: '香菇油菜',
+              name: '3香菇油菜',
               energy: 911,
               fat: 11,
               protein: 7,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/ZCxdQB8PsDoHRvox7zeppM.jpg'
+              img: './images/香菇油菜.png'
             },
             {
               id: 4,
-              name: '糖醋鱼块',
+              name: '4糖醋鱼块',
               energy: 2112,
               fat: 18,
               protein: 14,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/MjWrfsiSxQYN94FBVZ8eGQ.jpg'
+              img: './images/糖醋鱼块.png'
             },
             {
               id: 5,
-              name: '家常豆腐',
+              name: '5家常豆腐',
               energy: 1020,
               fat: 16,
               protein: 13,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/pGFz6HBFho2Bb7MTi6fd2F.jpg'
+              img: './images/家常豆腐.png'
             },
             {
               id: 6,
-              name: '香菜冬瓜',
+              name: '6香菜冬瓜',
               energy: 564,
               fat: 7,
               protein: 1,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/CYqmoi6XZx6gxYhMv9XfyF.jpg'
+              img: './images/香菜冬瓜.png'
             },
             {
               id: 7,
-              name: '宫保鸡丁',
+              name: '7宫保鸡丁',
               energy: 1033,
               fat: 18,
               protein: 7,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/RBR3uRDVZmt3CopW6AzTWi.jpg'
+              img: './images/宫保鸡丁.png'
             },
             {
               id: 8,
-              name: '土豆炖牛肉',
+              name: '8土豆炖牛肉',
               energy: 1095,
               fat: 23,
               protein: 16,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/Zx7zLixVhLz4uu9CWkh7xV.jpg'
+              img: './images/土豆炖牛肉.png'
             },
             {
               id: 9,
-              name: '韭菜炒豆芽',
+              name: '9韭菜炒豆芽',
               energy: 497,
               fat: 12,
               protein: 3,
-              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/BLzuC9JryrvnPynZfma2vj.jpg'
+              img: './images/韭菜炒豆芽.png'
             }
           ],
           TARGET: { energy: 2926, fat: 50 }
@@ -550,6 +637,16 @@
             if (t.energy < this.TARGET.energy)
               return "<span style='color:#ea580c;font-weight:bold;'>⚠️ 能量不足。</span> 建议增加一些主食或肉类。"
             return "<span style='color:#dc2626;font-weight:bold;'>⚠️ 脂肪偏高。</span> 试着把油炸或肥肉菜品换成鱼类或蔬菜吧！"
+          },
+          topSixCandidates() {
+            // 计算每个候选的总投票数并排序，取前6
+            return this.candidates
+              .map(c => ({
+                ...c,
+                total_votes: c.male_votes + c.female_votes
+              }))
+              .sort((a, b) => b.total_votes - a.total_votes)
+              .slice(0, 6)
           }
         },
         watch: {
@@ -635,25 +732,10 @@
             return true
           },
 
-          async createDefaultCandidate() {
-            try {
-              const defaultData = {
-                names: '炸鸡排 + 西红柿炒鸡蛋 + 香菇油菜',
-                dish_ids: '1,2,3',
-                energy: 3064,
-                fat: 45
-              }
-              await axios.post(`${API_BASE}/candidates`, defaultData)
-              await this.fetchCandidates(false) // 刷新并重新加载
-            } catch (err) {
-              console.error('创建默认方案失败', err)
-            }
-          },
-
           async saveCombination() {
             if (!this.canSave) return
             const selectedDishes = this.selectedDishes
-            const names = selectedDishes.map(d => d.name).join(' + ')
+            const names = selectedDishes.map(d => d.name).join('+')
             const dish_ids = selectedDishes
               .map(d => d.id)
               .sort((a, b) => a - b)
@@ -666,7 +748,7 @@
                 energy: t.energy,
                 fat: t.fat
               })
-              alert('方案已保存！可前往“统计区”查看并投票。')
+              alert('方案已保存！可前往"统计区"查看并投票。')
               // 保存成功后刷新候选列表（非静默，显示加载状态）
               await this.fetchCandidates(false)
               this.resetAll()
@@ -746,6 +828,181 @@
               clearTimeout(this.pollingTimer)
               this.pollingTimer = null
             }
+          },
+
+          // ---------- 新增方法 ----------
+          openStatsModal() {
+            this.showStatsModal = true
+            this.$nextTick(() => {
+              this.initStatsChart()
+            })
+          },
+
+          closeStatsModal() {
+            this.showStatsModal = false
+            if (this.statsChartInstance) {
+              this.statsChartInstance.dispose()
+              this.statsChartInstance = null
+            }
+          },
+
+          initStatsChart() {
+            const dom = document.getElementById('statsChart')
+            if (!dom) return
+
+            // 如果已有实例，先销毁
+            if (this.statsChartInstance) {
+              this.statsChartInstance.dispose()
+            }
+
+            // 初始化图表
+            this.statsChartInstance = echarts.init(dom)
+
+            // 更新图表数据
+            this.updateStatsChart()
+
+            // 监听窗口大小变化
+            window.addEventListener('resize', () => {
+              if (this.statsChartInstance) {
+                this.statsChartInstance.resize()
+              }
+            })
+          },
+
+          updateStatsChart() {
+            if (!this.statsChartInstance) return
+
+            // 获取前6个候选人数据
+            const top6 = this.topSixCandidates
+
+            if (top6.length === 0) {
+              this.statsChartInstance.clear()
+              return
+            }
+
+            const chartOption = {
+              title: {
+                text: '',
+                left: 'center',
+                top: '2%',
+                textStyle: {
+                  fontSize: 20,
+                  color: '#0C0302',
+                  fontWeight: 'bold'
+                }
+              },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'shadow'
+                }
+              },
+              legend: {
+                data: ['男生', '女生'],
+                orient: 'horizontal',
+                right: 'center',
+                top: '0',
+                itemGap: 30,
+                itemWidth: 24,
+                itemHeight: 24,
+                textStyle: {
+                  fontSize: 16
+                }
+              },
+              grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '0%',
+                top: '15%',
+                containLabel: true
+              },
+              xAxis: {
+                type: 'category',
+                data: top6.map(c => c.names), // 限制长度
+                axisLabel: {
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  lineHeight: 20,
+                  interval: 0,
+                  margin: 15,
+                  formatter: function (value) {
+                    // 自动换行处理长文本
+                    let result = ''
+                    const maxLength = 6
+                    for (let i = 0; i < value.length; i += maxLength) {
+                      result += value.substr(i, maxLength) + '\n'
+                    }
+                    return result
+                  }
+                }
+              },
+              yAxis: {
+                type: 'value',
+                name: '票数',
+                nameTextStyle: {
+                  fontSize: 16,
+                  padding: [0, 0, 10, -5]
+                },
+                minInterval: 1,
+                axisLabel: {
+                  fontSize: 14
+                }
+              },
+              series: [
+                {
+                  name: '男生',
+                  type: 'bar',
+                  data: top6.map(c => c.male_votes),
+                  barMaxWidth: 64,
+                  itemStyle: {
+                    color: new echarts.graphic.LinearGradient(
+                      0,
+                      0,
+                      0,
+                      1, // 垂直方向渐变
+                      [
+                        { offset: 0, color: '#60a5fa' }, // 开始颜色
+                        { offset: 1, color: '#3b82f6' } // 结束颜色
+                      ]
+                    ),
+                    borderRadius: [0, 0, 0, 0]
+                  },
+                  label: {
+                    show: true,
+                    position: 'top',
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                  }
+                },
+                {
+                  name: '女生',
+                  type: 'bar',
+                  data: top6.map(c => c.female_votes),
+                  barMaxWidth: 64,
+                  itemStyle: {
+                    color: new echarts.graphic.LinearGradient(
+                      0,
+                      0,
+                      0,
+                      1, // 垂直方向渐变
+                      [
+                        { offset: 0, color: '#f9a8d4' }, // 开始颜色
+                        { offset: 1, color: '#ec4899' } // 结束颜色
+                      ]
+                    ),
+                    borderRadius: [0, 0, 0, 0]
+                  },
+                  label: {
+                    show: true,
+                    position: 'top',
+                    fontSize: 14,
+                    fontWeight: 'bold'
+                  }
+                }
+              ]
+            }
+
+            this.statsChartInstance.setOption(chartOption)
           },
 
           // ---------- 原生交互方法 ----------
@@ -992,7 +1249,7 @@
           await this.$nextTick()
           this.initChart()
 
-          // 根据初始tab决定是否开启轮询 (若默认在统计区则启动)
+          // 根据初始tab决定是否开启轮询 (若默认在实验区则启动)
           if (this.currentTab === 'stats') {
             this.startPollingStats()
           }
@@ -1002,6 +1259,10 @@
           if (this.chartInstance) {
             this.chartInstance.dispose()
             this.chartInstance = null
+          }
+          if (this.statsChartInstance) {
+            this.statsChartInstance.dispose()
+            this.statsChartInstance = null
           }
         }
       })
