@@ -53,7 +53,9 @@ app.get('/api/candidates', async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM candidates ORDER BY id ASC')
     res.json(rows)
   } catch (err) {
-    res.status(500).json({ error: '获取候选方案失败' })
+    res
+      .status(500)
+      .json({ error: '获取候选方案失败', message: JSON.stringify(err) })
   }
 })
 
