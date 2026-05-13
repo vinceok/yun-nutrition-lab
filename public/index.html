@@ -332,10 +332,7 @@
             </h2>
             <div
               class="flex-1 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative">
-              <div
-                id="mainChart"
-                class="w-full h-full"
-                style="height: 488px; width: 935px"></div>
+              <div id="mainChart" class="w-full h-full"></div>
               <div
                 v-if="candidates.length === 0"
                 class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 bg-white/80 rounded-3xl">
@@ -346,7 +343,8 @@
           </div>
         </section>
         <aside
-          class="w-96 bg-white border-l border-gray-100 shadow-2xl flex flex-col">
+          class="w-96 bg-white border-l border-gray-100 shadow-2xl flex flex-col"
+          style="flex-shrink: 0">
           <div class="p-8 flex-1 overflow-y-auto custom-scrollbar">
             <h2 class="text-xl font-bold flex items-center gap-2 mb-8">
               <span
@@ -572,6 +570,12 @@
             if (newTab === 'stats') {
               // 切换到统计区 -> 启动轮询，并立即刷新一次数据
               this.startPollingStats()
+              // 确保图表在切换到显示时有正确的尺寸
+              this.$nextTick(() => {
+                if (this.chartInstance) {
+                  this.chartInstance.resize()
+                }
+              })
             } else if (oldTab === 'stats') {
               // 离开统计区 -> 停止轮询
               this.stopPollingStats()
@@ -799,11 +803,27 @@
           },
 
           initChart() {
-            const dom = document.getElementById('mainChart')
-            if (!dom) return
-            if (this.chartInstance) this.chartInstance.dispose()
-            this.chartInstance = echarts.init(dom)
-            this.updateChart()
+            // 使用 nextTick 确保 DOM 完全渲染后再初始化图表
+            this.$nextTick(() => {
+              const dom = document.getElementById('mainChart')
+              if (!dom) return
+
+              // 如果已有实例，先销毁
+              if (this.chartInstance) {
+                this.chartInstance.dispose()
+              }
+
+              // 初始化图表
+              this.chartInstance = echarts.init(dom)
+
+              // 手动触发 resize 确保图表尺寸正确
+              this.$nextTick(() => {
+                if (this.chartInstance) {
+                  this.chartInstance.resize()
+                }
+                this.updateChart() // 更新图表数据
+              })
+            })
           },
 
           updateChart() {
@@ -812,59 +832,124 @@
               this.chartInstance.clear()
               return
             }
-            this.chartInstance.setOption({
+
+            // 计算图表边距，确保四周间距相等
+            const chartOption = {
               title: {
                 text: '全班最喜欢的搭配统计',
-                left: 'center',
-                top: 0,
+                left: '1.5%', // 靠左对齐
+                top: '0',
                 textStyle: {
-                  fontSize: 18,
+                  fontSize: 24,
                   color: '#0C0302',
                   fontWeight: 'bold'
                 }
               },
-              tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'shadow'
+                }
+              },
               legend: {
                 data: ['男生', '女生'],
-                bottom: 0,
-                itemWidth: 14,
-                itemHeight: 14
+                right: '2%', // 放在右上角，与标题对齐
+                top: '0',
+                itemGap: 30,
+                itemWidth: 24,
+                itemHeight: 24,
+                textStyle: {
+                  fontSize: 20 // 增大图例字体
+                }
               },
               grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '15%',
-                top: '15%',
+                left: '2%', // 增加左边距
+                right: '2%', // 增加右边距
+                bottom: '2%', // 增加底部边距
+                top: '15%', // 增加顶部边距
                 containLabel: true
               },
               xAxis: {
                 type: 'category',
                 data: this.candidates.map(c => c.names),
                 axisLabel: {
-                  fontSize: 10,
+                  fontSize: 16, // 增大X轴字体
                   fontWeight: 'bold',
                   interval: 0,
-                  formatter: v => v.split(' + ').join('\n+ ')
+                  margin: 15,
+                  lineHeight: 20,
+                  // rotate: -45, // 旋转标签以适应较长的名称
+                  formatter: v => v.split(' + ').join('\n+ ') // 分行显示
                 }
               },
-              yAxis: { type: 'value', name: '票数', minInterval: 1 },
+              yAxis: {
+                type: 'value',
+                name: '票数',
+                nameTextStyle: {
+                  fontSize: 18, // 设置Y轴名称字体大小为18
+                  bottom: 10,
+                  padding: [0, 0, 20, -5]
+                },
+                minInterval: 1,
+                axisLabel: {
+                  fontSize: 18 // 增大Y轴字体
+                }
+              },
               series: [
                 {
                   name: '男生',
                   type: 'bar',
                   data: this.candidates.map(c => c.male_votes),
-                  itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] },
-                  label: { show: true, position: 'top', fontSize: 10 }
+                  barMaxWidth: 64,
+                  itemStyle: {
+                    color: new echarts.graphic.LinearGradient(
+                      0,
+                      0,
+                      0,
+                      1, // 垂直方向渐变
+                      [
+                        { offset: 0, color: '#60a5fa' }, // 开始颜色
+                        { offset: 1, color: '#3b82f6' } // 结束颜色
+                      ]
+                    ),
+                    borderRadius: [100, 100, 0, 0]
+                  },
+                  label: {
+                    show: true,
+                    position: 'top',
+                    fontSize: 18,
+                    fontWeight: 'bold'
+                  }
                 },
                 {
                   name: '女生',
                   type: 'bar',
                   data: this.candidates.map(c => c.female_votes),
-                  itemStyle: { color: '#ec4899', borderRadius: [4, 4, 0, 0] },
-                  label: { show: true, position: 'top', fontSize: 10 }
+                  barMaxWidth: 64,
+                  itemStyle: {
+                    color: new echarts.graphic.LinearGradient(
+                      0,
+                      0,
+                      0,
+                      1, // 垂直方向渐变
+                      [
+                        { offset: 0, color: '#f9a8d4' }, // 开始颜色
+                        { offset: 1, color: '#ec4899' } // 结束颜色
+                      ]
+                    ),
+                    borderRadius: [100, 100, 0, 0]
+                  },
+                  label: {
+                    show: true,
+                    position: 'top',
+                    fontSize: 18,
+                    fontWeight: 'bold'
+                  }
                 }
               ]
-            })
+            }
+
+            this.chartInstance.setOption(chartOption)
           },
 
           runEntryAnimation() {
@@ -895,13 +980,18 @@
           document.body.addEventListener('click', () => this.playAudio(), {
             once: true
           })
+
           window.addEventListener('resize', () => {
             if (this.chartInstance) this.chartInstance.resize()
           })
+
           // 初始加载候选方案
           await this.fetchCandidates(false)
-          // 初始化图表
-          this.$nextTick(() => this.initChart())
+
+          // 在下一个 tick 中初始化图表，确保 DOM 已经完全渲染
+          await this.$nextTick()
+          this.initChart()
+
           // 根据初始tab决定是否开启轮询 (若默认在统计区则启动)
           if (this.currentTab === 'stats') {
             this.startPollingStats()
