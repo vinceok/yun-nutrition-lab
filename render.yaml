@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: nutrition-lab
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: nutrition-lab-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: nutrition-lab-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: nutrition-lab-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: nutrition-lab-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: nutrition-lab-db
+          property: database
+
+databases:
+  - name: nutrition-lab-db
+    plan: free

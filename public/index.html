@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>营养午餐实验室 - 探索健康配餐</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#FF5600',
+              secondary: '#74706E',
+              accent: '#FF8941',
+              bgMain: '#F4F3EC',
+              cardBg: '#FFFFFF'
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js"></script>
+    <!-- 引入 axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+      body {
+        font-family: 'Noto Sans SC', sans-serif;
+        background-color: #f4f3ec;
+        color: #0c0302;
+        margin: 0;
+        line-height: 1.5;
+      }
+      .dish-card {
+        transition: all 0.3s ease;
+      }
+      .dish-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      .dish-card.selected {
+        border-color: #ff5600 !important;
+        background-color: #fff7f2;
+      }
+      .progress-fill {
+        transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+      }
+      .history-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1rem;
+        border: 1px solid #eee;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        position: relative;
+        margin-bottom: 1rem;
+      }
+      .btn-pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(255, 86, 0, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(255, 86, 0, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 86, 0, 0);
+        }
+      }
+      .tab-btn.active {
+        background-color: #ff5600;
+        color: white;
+        box-shadow: 0 4px 12px rgba(255, 86, 0, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 顶部导航（保持不变） -->
+      <header class="glass-nav border-b border-gray-200 sticky top-0 z-50">
+        <div
+          class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div class="flex items-center gap-4">
+            <div
+              class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg"
+              style="box-shadow: 0 10px 15px -3px rgba(255, 86, 0, 0.2)">
+              🍱
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold tracking-tight">营养午餐实验室</h1>
+              <p class="text-xs text-secondary">
+                Nutrition Lab - Textbook Edition
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <nav class="flex bg-gray-100 p-1 rounded-xl mr-4">
+              <button
+                @click="switchTab('lab')"
+                :class="['tab-btn px-6 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'lab' ? 'active' : '']">
+                实验区
+              </button>
+              <button
+                @click="switchTab('stats')"
+                :class="['tab-btn px-6 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'stats' ? 'active' : '']">
+                统计区
+              </button>
+            </nav>
+            <div class="hidden md:flex items-end">
+              <span
+                class="text-sm font-bold text-primary uppercase tracking-widest"
+                >健康目标：</span
+              >
+              <span class="text-sm font-medium"
+                >热量 ≥ 2926kJ | 脂肪 ≤ 50g</span
+              >
+            </div>
+            <button
+              @click="resetAll"
+              class="px-4 py-2 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-2">
+              ↻ 重置实验
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- 实验区（结构不变，仅逻辑调用 API） -->
+      <main
+        v-show="currentTab === 'lab'"
+        class="flex-1 flex overflow-hidden"
+        style="height: calc(100vh - 80px)">
+        <section class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          <!-- ... 菜品网格 ... 完全复用原代码 ... -->
+          <div class="max-w-5xl mx-auto">
+            <div class="flex items-center justify-between mb-8">
+              <h2 class="text-xl font-bold flex items-center gap-2">
+                <span
+                  class="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm"
+                  >01</span
+                >挑选 3 道你最喜欢的菜
+              </h2>
+              <span class="text-sm text-secondary"
+                >数据来源：人教版数学四年级下册</span
+              >
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div
+                v-for="dish in dishes"
+                :key="dish.id"
+                :id="'card-' + dish.id"
+                @click="toggleDish(dish.id)"
+                :class="['dish-card bg-white rounded-3xl p-5 cursor-pointer border-2 shadow-sm', selected.includes(dish.id) ? 'selected border-primary' : 'border-transparent']">
+                <div
+                  class="aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-gray-50">
+                  <img
+                    :src="dish.img"
+                    class="w-full h-full object-cover"
+                    :alt="dish.name" />
+                </div>
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h3 class="font-bold text-lg">{{ dish.name }}</h3>
+                    <p class="text-xs text-secondary font-medium">
+                      🔥 {{ dish.energy }}kJ | 🥩 {{ dish.fat }}g
+                    </p>
+                  </div>
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-gray-100 flex items-center justify-center transition-all">
+                    <div
+                      :class="['w-4 h-4 bg-primary rounded-full transition-transform', selected.includes(dish.id) ? '' : 'scale-0']"
+                      :style="{ transform: selected.includes(dish.id) ? 'scale(1)' : 'scale(0)' }"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- 右侧分析面板省略，基本不变 -->
+      </main>
+
+      <!-- 统计区（图表和候选列表改为从 API 获取） -->
+      <main
+        v-show="currentTab === 'stats'"
+        class="flex-1 flex overflow-hidden"
+        style="height: calc(100vh - 80px)">
+        <!-- ... 图表部分不变，仅数据源改为 candidates ... -->
+        <section class="flex-1 p-8 flex flex-col">
+          <!-- 略 -->
+        </section>
+        <aside
+          class="w-96 bg-white border-l border-gray-100 shadow-2xl flex flex-col">
+          <div class="p-8 flex-1 overflow-y-auto custom-scrollbar">
+            <h2 class="text-xl font-bold flex items-center gap-2 mb-8">
+              <span
+                class="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm"
+                >04</span
+              >候选搭配方案
+            </h2>
+            <div v-if="loading" class="text-center py-10 text-gray-400">
+              加载中...
+            </div>
+            <div
+              v-else-if="candidates.length === 0"
+              class="py-20 text-center text-gray-300">
+              <p class="text-sm">还没有候选方案哦</p>
+            </div>
+            <div
+              v-for="(c, index) in candidates"
+              :key="c.id"
+              class="history-card">
+              <button
+                @click="removeCandidate(c.id)"
+                class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div class="font-bold text-sm mb-2 pr-6 text-gray-800">
+                {{ c.names }}
+              </div>
+              <div class="flex justify-between items-center text-xs mb-4">
+                <span class="text-secondary"
+                  >🔥 {{ c.energy }}kJ | 🥩 {{ c.fat }}g</span
+                >
+                <span class="text-green-600 font-bold">达标</span>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  @click="voteFor(c.id, 'male')"
+                  class="flex-1 bg-blue-500 text-white py-2 rounded-xl text-xs font-bold hover:bg-blue-600 transition-all shadow-sm">
+                  ♂ 男 ({{ c.male_votes }})
+                </button>
+                <button
+                  @click="voteFor(c.id, 'female')"
+                  class="flex-1 bg-pink-500 text-white py-2 rounded-xl text-xs font-bold hover:bg-pink-600 transition-all shadow-sm">
+                  ♀ 女 ({{ c.female_votes }})
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="p-8 bg-blue-50 border-t border-blue-100">
+            <p class="text-xs text-blue-800/70 leading-relaxed">
+              提示：点击方案下方的按钮，模拟全班同学进行投票。
+            </p>
+          </div>
+        </aside>
+      </main>
+      <audio
+        id="welcome-audio"
+        src="https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/audio/9dt7SCxUoE9BL58rWupFNe.mp3"></audio>
+    </div>
+
+    <script>
+      // 基础 API 地址（根据实际部署修改）
+      const API_BASE = '/api'
+
+      new Vue({
+        el: '#app',
+        data: {
+          currentTab: 'lab',
+          selected: [],
+          historyLog: [],
+          candidates: [],
+          loading: false, // 列表加载状态
+          animatedEnergy: 0,
+          animatedFat: 0,
+          chartInstance: null,
+          audioPlayed: false,
+          dishes: [
+            {
+              id: 1,
+              name: '炸鸡排',
+              energy: 1254,
+              fat: 19,
+              protein: 20,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/oK56wwRyqRESwZ92R2EMz5.jpg'
+            },
+            {
+              id: 2,
+              name: '西红柿炒鸡蛋',
+              energy: 899,
+              fat: 15,
+              protein: 11,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/vKqrXD6dvZV3w3Nu4wNNLM.jpg'
+            },
+            {
+              id: 3,
+              name: '香菇油菜',
+              energy: 911,
+              fat: 11,
+              protein: 7,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/ZCxdQB8PsDoHRvox7zeppM.jpg'
+            },
+            {
+              id: 4,
+              name: '糖醋鱼块',
+              energy: 2112,
+              fat: 18,
+              protein: 14,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/MjWrfsiSxQYN94FBVZ8eGQ.jpg'
+            },
+            {
+              id: 5,
+              name: '家常豆腐',
+              energy: 1020,
+              fat: 16,
+              protein: 13,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/pGFz6HBFho2Bb7MTi6fd2F.jpg'
+            },
+            {
+              id: 6,
+              name: '香菜冬瓜',
+              energy: 564,
+              fat: 7,
+              protein: 1,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/CYqmoi6XZx6gxYhMv9XfyF.jpg'
+            },
+            {
+              id: 7,
+              name: '宫保鸡丁',
+              energy: 1033,
+              fat: 18,
+              protein: 7,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/RBR3uRDVZmt3CopW6AzTWi.jpg'
+            },
+            {
+              id: 8,
+              name: '土豆炖牛肉',
+              energy: 1095,
+              fat: 23,
+              protein: 16,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/Zx7zLixVhLz4uu9CWkh7xV.jpg'
+            },
+            {
+              id: 9,
+              name: '韭菜炒豆芽',
+              energy: 497,
+              fat: 12,
+              protein: 3,
+              img: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/picture/BLzuC9JryrvnPynZfma2vj.jpg'
+            }
+          ],
+          TARGET: { energy: 2926, fat: 50 }
+        },
+        computed: {
+          selectedDishes() {
+            return this.dishes.filter(d => this.selected.includes(d.id))
+          },
+          currentTotals() {
+            return this.selectedDishes.reduce(
+              (acc, d) => ({
+                energy: acc.energy + d.energy,
+                fat: acc.fat + d.fat
+              }),
+              { energy: 0, fat: 0 }
+            )
+          },
+          energyPercent() {
+            return Math.min((this.currentTotals.energy / 4000) * 100, 100)
+          },
+          fatPercent() {
+            return Math.min((this.currentTotals.fat / 80) * 100, 100)
+          },
+          energyBarColor() {
+            return this.currentTotals.energy >= this.TARGET.energy
+              ? '#22C55E'
+              : '#FF5600'
+          },
+          fatBarColor() {
+            return this.currentTotals.fat > this.TARGET.fat
+              ? '#EF4444'
+              : '#FDBA74'
+          },
+          canSave() {
+            if (this.selected.length < 3) return false
+            const t = this.currentTotals
+            return t.energy >= this.TARGET.energy && t.fat <= this.TARGET.fat
+          },
+          aiFeedback() {
+            if (this.selected.length < 3)
+              return `你还需要挑选 <b>${3 - this.selected.length}</b> 种食物来完成配餐。`
+            const t = this.currentTotals
+            if (t.energy >= this.TARGET.energy && t.fat <= this.TARGET.fat)
+              return "<span style='color:#16a34a;font-weight:bold;'>✅ 完美！</span> 你的配餐既保证了充足的能量，又控制了脂肪摄入。"
+            if (t.energy < this.TARGET.energy)
+              return "<span style='color:#ea580c;font-weight:bold;'>⚠️ 能量不足。</span> 建议增加一些主食或肉类。"
+            return "<span style='color:#dc2626;font-weight:bold;'>⚠️ 脂肪偏高。</span> 试着把油炸或肥肉菜品换成鱼类或蔬菜吧！"
+          }
+        },
+        watch: {
+          currentTotals: {
+            handler(newVal) {
+              this.animateValue('energy', newVal.energy)
+              this.animateValue('fat', newVal.fat)
+            },
+            immediate: false
+          },
+          candidates: {
+            deep: true,
+            handler() {
+              this.$nextTick(() => this.updateChart())
+            }
+          },
+          currentTab(newTab) {
+            if (newTab === 'stats') {
+              this.$nextTick(() => {
+                if (this.chartInstance) this.chartInstance.resize()
+                else this.initChart()
+              })
+            }
+          }
+        },
+        methods: {
+          // ********** API 相关方法 **********
+          async fetchCandidates() {
+            this.loading = true
+            try {
+              const res = await axios.get(`${API_BASE}/candidates`)
+              this.candidates = res.data
+              // 若无数据，自动创建默认示例（保持与原始 HTML 一致）
+              if (this.candidates.length === 0) {
+                await this.createDefaultCandidate()
+              }
+            } catch (err) {
+              console.error('获取候选方案失败', err)
+              alert('网络错误，无法加载候选方案，请刷新重试。')
+            } finally {
+              this.loading = false
+            }
+          },
+          async createDefaultCandidate() {
+            try {
+              const defaultData = {
+                names: '炸鸡排 + 西红柿炒鸡蛋 + 香菇油菜',
+                dish_ids: '1,2,3',
+                energy: 3064,
+                fat: 45
+              }
+              await axios.post(`${API_BASE}/candidates`, defaultData)
+              // 重新获取列表
+              const res = await axios.get(`${API_BASE}/candidates`)
+              this.candidates = res.data
+            } catch (err) {
+              console.error('创建默认方案失败', err)
+            }
+          },
+          async saveCombination() {
+            if (!this.canSave) return
+            const selectedDishes = this.selectedDishes
+            const names = selectedDishes.map(d => d.name).join(' + ')
+            const dish_ids = selectedDishes
+              .map(d => d.id)
+              .sort((a, b) => a - b)
+              .join(',')
+            const t = this.currentTotals
+            try {
+              await axios.post(`${API_BASE}/candidates`, {
+                names,
+                dish_ids,
+                energy: t.energy,
+                fat: t.fat
+              })
+              alert('方案已保存！可前往“统计区”查看并投票。')
+              await this.fetchCandidates() // 刷新列表
+              this.resetAll()
+            } catch (err) {
+              if (err.response && err.response.status === 409) {
+                alert('该方案已在候选名单中！')
+              } else {
+                console.error('保存失败', err)
+                alert('保存失败，请稍后重试。')
+              }
+            }
+          },
+          async voteFor(candidateId, gender) {
+            try {
+              await axios.post(`${API_BASE}/vote`, {
+                candidate_id: candidateId,
+                gender
+              })
+              // 刷新列表以获取最新票数
+              await this.fetchCandidates()
+            } catch (err) {
+              console.error('投票失败', err)
+              alert('投票失败，请稍后重试。')
+            }
+          },
+          async removeCandidate(candidateId) {
+            if (!confirm('确定要删除这个候选方案吗？')) return
+            try {
+              await axios.delete(`${API_BASE}/candidates/${candidateId}`)
+              await this.fetchCandidates()
+            } catch (err) {
+              console.error('删除失败', err)
+              alert('删除失败，请稍后重试。')
+            }
+          },
+
+          // ********** 原有方法（不变） **********
+          switchTab(tab) {
+            this.currentTab = tab
+          },
+          toggleDish(id) {
+            const idx = this.selected.indexOf(id)
+            const dish = this.dishes.find(d => d.id === id)
+            if (idx > -1) {
+              this.selected.splice(idx, 1)
+              this.addLog(`移除了 ${dish.name}`)
+            } else {
+              if (this.selected.length >= 3) {
+                alert('餐盘已满！请先移除一个菜品。')
+                return
+              }
+              this.selected.push(id)
+              this.addLog(`选择了 ${dish.name}`)
+            }
+          },
+          resetAll() {
+            this.selected = []
+            this.historyLog = []
+            this.addLog('实验已重置')
+          },
+          addLog(msg) {
+            const time = new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })
+            this.historyLog.unshift(`[${time}] ${msg}`)
+          },
+          animateValue(type, target) {
+            const start =
+              type === 'energy' ? this.animatedEnergy : this.animatedFat
+            const vm = this
+            anime({
+              targets: { val: start },
+              val: target,
+              round: 1,
+              duration: 800,
+              easing: 'easeOutExpo',
+              update: function (a) {
+                if (type === 'energy')
+                  vm.animatedEnergy = a.animatables[0].target.val
+                else vm.animatedFat = a.animatables[0].target.val
+              }
+            })
+          },
+          initChart() {
+            const dom = document.getElementById('mainChart')
+            if (!dom) return
+            if (this.chartInstance) this.chartInstance.dispose()
+            this.chartInstance = echarts.init(dom)
+            this.updateChart()
+          },
+          updateChart() {
+            if (!this.chartInstance) return
+            if (this.candidates.length === 0) {
+              this.chartInstance.clear()
+              return
+            }
+            this.chartInstance.setOption({
+              title: {
+                text: '全班最喜欢的搭配统计',
+                left: 'center',
+                top: 0,
+                textStyle: {
+                  fontSize: 18,
+                  color: '#0C0302',
+                  fontWeight: 'bold'
+                }
+              },
+              tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+              legend: {
+                data: ['男生', '女生'],
+                bottom: 0,
+                itemWidth: 14,
+                itemHeight: 14
+              },
+              grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                top: '15%',
+                containLabel: true
+              },
+              xAxis: {
+                type: 'category',
+                data: this.candidates.map(c => c.names),
+                axisLabel: {
+                  fontSize: 10,
+                  fontWeight: 'bold',
+                  interval: 0,
+                  formatter: v => v.split(' + ').join('\n+ ')
+                }
+              },
+              yAxis: { type: 'value', name: '票数', minInterval: 1 },
+              series: [
+                {
+                  name: '男生',
+                  type: 'bar',
+                  data: this.candidates.map(c => c.male_votes),
+                  itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] },
+                  label: { show: true, position: 'top', fontSize: 10 }
+                },
+                {
+                  name: '女生',
+                  type: 'bar',
+                  data: this.candidates.map(c => c.female_votes),
+                  itemStyle: { color: '#ec4899', borderRadius: [4, 4, 0, 0] },
+                  label: { show: true, position: 'top', fontSize: 10 }
+                }
+              ]
+            })
+          },
+          runEntryAnimation() {
+            const cards = document.querySelectorAll('.dish-card')
+            if (cards.length) {
+              anime({
+                targets: cards,
+                translateY: [30, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(80),
+                easing: 'easeOutExpo'
+              })
+            }
+          },
+          playAudio() {
+            if (this.audioPlayed) return
+            const audio = document.getElementById('welcome-audio')
+            if (audio && audio.paused) {
+              audio.play().catch(() => {})
+              this.audioPlayed = true
+            }
+          }
+        },
+        async mounted() {
+          this.addLog('实验已重置')
+          this.$nextTick(() => this.runEntryAnimation())
+          document.body.addEventListener('click', () => this.playAudio(), {
+            once: true
+          })
+          window.addEventListener('resize', () => {
+            if (this.chartInstance) this.chartInstance.resize()
+          })
+          // 初始化从后端加载候选方案
+          await this.fetchCandidates()
+        },
+        beforeDestroy() {
+          if (this.chartInstance) {
+            this.chartInstance.dispose()
+            this.chartInstance = null
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
