@@ -22,12 +22,12 @@
         }
       }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../lib/anime.min.js"></script>
+    <script src="../lib/echarts.min.js"></script>
+    <script src="../lib/vue.min.js"></script>
+    <script src="../lib/axios.min.js"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+      /* @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap'); */
       body {
         font-family: 'Noto Sans SC', sans-serif;
         background-color: #f4f3ec;
@@ -335,7 +335,7 @@
               <div
                 id="mainChart"
                 class="w-full h-full"
-                style="min-height: 328px"></div>
+                style="height: 488px; width: 935px"></div>
               <div
                 v-if="candidates.length === 0"
                 class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 bg-white/80 rounded-3xl">
@@ -411,13 +411,11 @@
           </div>
         </aside>
       </main>
-      <audio
-        id="welcome-audio"
-        src="https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/audio/9dt7SCxUoE9BL58rWupFNe.mp3"></audio>
+      <audio id="welcome-audio" src="../lib/audio.mp3"></audio>
     </div>
 
     <script>
-      const API_BASE = '/api'
+      const API_BASE = 'https://yun-nutrition-lab.onrender.com/api'
 
       new Vue({
         el: '#app',
@@ -685,7 +683,7 @@
                 gender
               })
               // 投票后立即刷新（非静默，更新票数）
-              await this.fetchCandidates(false)
+              await this.fetchCandidates(true)
             } catch (err) {
               console.error('投票失败', err)
               alert('投票失败，请稍后重试。')
