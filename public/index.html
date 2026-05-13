@@ -2,8 +2,10 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>营养午餐实验室 - 探索健康配餐</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>营养午餐实验室 - 动态统计｜健康配餐</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -23,11 +25,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.min.js"></script>
-    <!-- 引入 axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
-
       body {
         font-family: 'Noto Sans SC', sans-serif;
         background-color: #f4f3ec;
@@ -93,10 +93,10 @@
   </head>
   <body>
     <div id="app">
-      <!-- 顶部导航（保持不变） -->
+      <!-- 顶部导航 -->
       <header class="glass-nav border-b border-gray-200 sticky top-0 z-50">
         <div
-          class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center flex-wrap gap-3">
           <div class="flex items-center gap-4">
             <div
               class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg"
@@ -105,13 +105,11 @@
             </div>
             <div>
               <h1 class="text-2xl font-bold tracking-tight">营养午餐实验室</h1>
-              <p class="text-xs text-secondary">
-                Nutrition Lab - Textbook Edition
-              </p>
+              <p class="text-xs text-secondary">Nutrition Lab - 动态统计版</p>
             </div>
           </div>
           <div class="flex items-center gap-4">
-            <nav class="flex bg-gray-100 p-1 rounded-xl mr-4">
+            <nav class="flex bg-gray-100 p-1 rounded-xl">
               <button
                 @click="switchTab('lab')"
                 :class="['tab-btn px-6 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'lab' ? 'active' : '']">
@@ -141,20 +139,20 @@
         </div>
       </header>
 
-      <!-- 实验区（结构不变，仅逻辑调用 API） -->
+      <!-- 实验区 -->
       <main
         v-show="currentTab === 'lab'"
         class="flex-1 flex overflow-hidden"
         style="height: calc(100vh - 80px)">
         <section class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          <!-- 菜品网格 -->
           <div class="max-w-5xl mx-auto">
             <div class="flex items-center justify-between mb-8">
               <h2 class="text-xl font-bold flex items-center gap-2">
                 <span
                   class="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm"
                   >01</span
-                >挑选 3 道你最喜欢的菜
+                >
+                挑选 3 道你最喜欢的菜
               </h2>
               <span class="text-sm text-secondary"
                 >数据来源：人教版数学四年级下册</span
@@ -164,7 +162,6 @@
               <div
                 v-for="dish in dishes"
                 :key="dish.id"
-                :id="'card-' + dish.id"
                 @click="toggleDish(dish.id)"
                 :class="['dish-card bg-white rounded-3xl p-5 cursor-pointer border-2 shadow-sm', selected.includes(dish.id) ? 'selected border-primary' : 'border-transparent']">
                 <div
@@ -203,8 +200,6 @@
               >
               实时营养分析
             </h2>
-
-            <!-- 已选清单 -->
             <div class="mb-10">
               <label
                 class="text-xs font-bold text-secondary uppercase tracking-widest mb-4 block"
@@ -230,11 +225,9 @@
                 </div>
               </div>
             </div>
-
-            <!-- 数据可视化 -->
             <div class="space-y-8">
               <!-- 热量 -->
-              <div class="group">
+              <div>
                 <div class="flex justify-between items-end mb-3">
                   <span class="text-sm font-bold text-secondary"
                     >🔥 总热量 (kJ)</span
@@ -255,13 +248,11 @@
                 </div>
                 <div
                   class="flex justify-between text-xs font-bold text-gray-400 mt-2 uppercase tracking-tighter">
-                  <span>0</span>
-                  <span>目标: 2926</span>
+                  <span>0</span><span>目标: 2926</span>
                 </div>
               </div>
-
               <!-- 脂肪 -->
-              <div class="group">
+              <div>
                 <div class="flex justify-between items-end mb-3">
                   <span class="text-sm font-bold text-secondary"
                     >🥩 总脂肪 (g)</span
@@ -282,24 +273,18 @@
                 </div>
                 <div
                   class="flex justify-between text-xs font-bold text-gray-400 mt-2 uppercase tracking-tighter">
-                  <span>0</span>
-                  <span>上限: 50</span>
+                  <span>0</span><span>上限: 50</span>
                 </div>
               </div>
             </div>
-
-            <!-- 保存按钮 -->
             <div class="mt-8">
               <button
                 @click="saveCombination"
                 :disabled="!canSave"
-                :class="['w-full py-4 rounded-2xl bg-primary text-white font-bold transition-all shadow-lg', canSave ? 'btn-pulse' : 'opacity-50 cursor-not-allowed']"
-                :style="{ boxShadow: canSave ? '0 10px 15px -3px rgba(255,86,0,0.2)' : '' }">
+                :class="['w-full py-4 rounded-2xl bg-primary text-white font-bold transition-all shadow-lg', canSave ? 'btn-pulse' : 'opacity-50 cursor-not-allowed']">
                 保存为候选方案
               </button>
             </div>
-
-            <!-- 实验记录 -->
             <div class="mt-10">
               <label
                 class="text-xs font-bold text-secondary uppercase tracking-widest mb-4 block"
@@ -312,8 +297,6 @@
               </div>
             </div>
           </div>
-
-          <!-- AI诊断 -->
           <div class="p-8 bg-orange-50 border-t border-orange-100">
             <div class="flex gap-4">
               <div
@@ -333,7 +316,7 @@
         </aside>
       </main>
 
-      <!-- 统计区（图表和候选列表改为从 API 获取） -->
+      <!-- 统计区（自动轮询更新数据） -->
       <main
         v-show="currentTab === 'stats'"
         class="flex-1 flex overflow-hidden"
@@ -345,7 +328,7 @@
                 class="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm"
                 >03</span
               >
-              全班最喜欢的搭配统计
+              全班最喜欢的搭配统计（动态刷新）
             </h2>
             <div
               class="flex-1 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative">
@@ -355,7 +338,7 @@
                 style="min-height: 328px"></div>
               <div
                 v-if="candidates.length === 0"
-                class="absolute inset-0 flex flex-col items-center justify-center text-gray-300">
+                class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 bg-white/80 rounded-3xl">
                 <span class="text-6xl mb-4">📊</span>
                 <p>暂无统计数据，请先在实验区保存方案并投票</p>
               </div>
@@ -369,9 +352,16 @@
               <span
                 class="w-8 h-8 rounded-full bg-orange-100 text-primary flex items-center justify-center text-sm"
                 >04</span
-              >候选搭配方案
+              >
+              候选搭配方案
+              <span
+                class="ml-auto text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full"
+                >⏱️ 自动刷新中</span
+              >
             </h2>
-            <div v-if="loading" class="text-center py-10 text-gray-400">
+            <div
+              v-if="loading && !silentPolling"
+              class="text-center py-10 text-gray-400">
               加载中...
             </div>
             <div
@@ -379,10 +369,7 @@
               class="py-20 text-center text-gray-300">
               <p class="text-sm">还没有候选方案哦</p>
             </div>
-            <div
-              v-for="(c, index) in candidates"
-              :key="c.id"
-              class="history-card">
+            <div v-for="c in candidates" :key="c.id" class="history-card">
               <button
                 @click="removeCandidate(c.id)"
                 class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors">
@@ -430,7 +417,6 @@
     </div>
 
     <script>
-      // 基础 API 地址（根据实际部署修改）
       const API_BASE = '/api'
 
       new Vue({
@@ -440,11 +426,15 @@
           selected: [],
           historyLog: [],
           candidates: [],
-          loading: false, // 列表加载状态
+          loading: false,
           animatedEnergy: 0,
           animatedFat: 0,
           chartInstance: null,
           audioPlayed: false,
+          // 轮询配置 (2秒，可自由调整)
+          pollIntervalMs: 2000,
+          pollingTimer: null, // 递归 setTimeout id
+          silentPolling: false, // 静默轮询标志（仅用于UI提示，不干扰loading）
           dishes: [
             {
               id: 1,
@@ -580,33 +570,69 @@
               this.$nextTick(() => this.updateChart())
             }
           },
-          currentTab(newTab) {
+          currentTab(newTab, oldTab) {
             if (newTab === 'stats') {
-              this.$nextTick(() => {
-                if (this.chartInstance) this.chartInstance.resize()
-                else this.initChart()
-              })
+              // 切换到统计区 -> 启动轮询，并立即刷新一次数据
+              this.startPollingStats()
+            } else if (oldTab === 'stats') {
+              // 离开统计区 -> 停止轮询
+              this.stopPollingStats()
             }
           }
         },
         methods: {
-          // ********** API 相关方法 **********
-          async fetchCandidates() {
-            this.loading = true
+          // ---------- 核心API交互（支持静默轮询 + 数据变动甄别）----------
+          async fetchCandidates(silent = false) {
+            // silent: 静默模式(轮询调用) 不显示全局loading，且不弹出错误提示框
+            if (!silent) {
+              this.loading = true
+            }
             try {
               const res = await axios.get(`${API_BASE}/candidates`)
-              this.candidates = res.data
-              // 若无数据，自动创建默认示例（保持与原始 HTML 一致）
-              if (this.candidates.length === 0) {
-                await this.createDefaultCandidate()
+              const newList = res.data || []
+
+              // 重要：深度比较新旧数据，只有真正发生变化时才更新candidates (避免图表无意义重绘)
+              if (!this.isCandidatesEqual(this.candidates, newList)) {
+                this.candidates = newList
               }
+              // 若没有任何候选且不是静默模式且列表为空，尝试创建默认示例（保持教学友好）
+              // if (!silent && this.candidates.length === 0) {
+              //   await this.createDefaultCandidate()
+              // }
             } catch (err) {
               console.error('获取候选方案失败', err)
-              alert('网络错误，无法加载候选方案，请刷新重试。')
+              if (!silent) {
+                alert('网络错误，无法加载候选方案，请刷新重试。')
+              }
             } finally {
-              this.loading = false
+              if (!silent) {
+                this.loading = false
+              }
             }
           },
+
+          // 深度比较候选数组是否相等（基于唯一标识 + 关键字段，确保变动才刷新）
+          isCandidatesEqual(arrA, arrB) {
+            if (!arrA && !arrB) return true
+            if (!arrA || !arrB) return false
+            if (arrA.length !== arrB.length) return false
+            // 按照id排序后比较所有重要字段 (id, names, energy, fat, male_votes, female_votes, dish_ids)
+            const sortedA = [...arrA].sort((a, b) => a.id - b.id)
+            const sortedB = [...arrB].sort((a, b) => a.id - b.id)
+            for (let i = 0; i < sortedA.length; i++) {
+              const a = sortedA[i]
+              const b = sortedB[i]
+              if (a.id !== b.id) return false
+              if (a.names !== b.names) return false
+              if (a.energy !== b.energy) return false
+              if (a.fat !== b.fat) return false
+              if (a.male_votes !== b.male_votes) return false
+              if (a.female_votes !== b.female_votes) return false
+              if (a.dish_ids !== b.dish_ids) return false
+            }
+            return true
+          },
+
           async createDefaultCandidate() {
             try {
               const defaultData = {
@@ -616,13 +642,12 @@
                 fat: 45
               }
               await axios.post(`${API_BASE}/candidates`, defaultData)
-              // 重新获取列表
-              const res = await axios.get(`${API_BASE}/candidates`)
-              this.candidates = res.data
+              await this.fetchCandidates(false) // 刷新并重新加载
             } catch (err) {
               console.error('创建默认方案失败', err)
             }
           },
+
           async saveCombination() {
             if (!this.canSave) return
             const selectedDishes = this.selectedDishes
@@ -640,7 +665,8 @@
                 fat: t.fat
               })
               alert('方案已保存！可前往“统计区”查看并投票。')
-              await this.fetchCandidates() // 刷新列表
+              // 保存成功后刷新候选列表（非静默，显示加载状态）
+              await this.fetchCandidates(false)
               this.resetAll()
             } catch (err) {
               if (err.response && err.response.status === 409) {
@@ -651,34 +677,80 @@
               }
             }
           },
+
           async voteFor(candidateId, gender) {
             try {
               await axios.post(`${API_BASE}/vote`, {
                 candidate_id: candidateId,
                 gender
               })
-              // 刷新列表以获取最新票数
-              await this.fetchCandidates()
+              // 投票后立即刷新（非静默，更新票数）
+              await this.fetchCandidates(false)
             } catch (err) {
               console.error('投票失败', err)
               alert('投票失败，请稍后重试。')
             }
           },
+
           async removeCandidate(candidateId) {
             if (!confirm('确定要删除这个候选方案吗？')) return
             try {
               await axios.delete(`${API_BASE}/candidates/${candidateId}`)
-              await this.fetchCandidates()
+              await this.fetchCandidates(false)
             } catch (err) {
               console.error('删除失败', err)
               alert('删除失败，请稍后重试。')
             }
           },
 
-          // ********** 原有方法（不变） **********
+          // ---------- 轮询控制 (基于setTimeout 递归，避免请求堆积) ----------
+          startPollingStats() {
+            // 避免重复启动
+            if (this.pollingTimer) {
+              this.stopPollingStats()
+            }
+            // 立即执行一次静默刷新，保证图表数据最新
+            this.silentPollFetch()
+            // 递归轮询
+            this.schedulePoll()
+          },
+
+          schedulePoll() {
+            this.pollingTimer = setTimeout(async () => {
+              await this.silentPollFetch()
+              // 递归发起下一次轮询 (仅在统计区且组件存活时)
+              if (this.currentTab === 'stats') {
+                this.schedulePoll()
+              }
+            }, this.pollIntervalMs)
+          },
+
+          async silentPollFetch() {
+            // 静默获取数据（无loading动画，不弹出错误提示，仅在数据变更时更新UI）
+            try {
+              const res = await axios.get(`${API_BASE}/candidates`)
+              const newList = res.data || []
+              if (!this.isCandidatesEqual(this.candidates, newList)) {
+                this.candidates = newList
+              }
+            } catch (err) {
+              console.warn('静默轮询获取数据失败', err)
+              // 轮询失败不打断流程，等待下次继续
+            }
+          },
+
+          stopPollingStats() {
+            if (this.pollingTimer) {
+              clearTimeout(this.pollingTimer)
+              this.pollingTimer = null
+            }
+          },
+
+          // ---------- 原生交互方法 ----------
           switchTab(tab) {
             this.currentTab = tab
           },
+
           toggleDish(id) {
             const idx = this.selected.indexOf(id)
             const dish = this.dishes.find(d => d.id === id)
@@ -694,11 +766,13 @@
               this.addLog(`选择了 ${dish.name}`)
             }
           },
+
           resetAll() {
             this.selected = []
             this.historyLog = []
             this.addLog('实验已重置')
           },
+
           addLog(msg) {
             const time = new Date().toLocaleTimeString([], {
               hour: '2-digit',
@@ -707,6 +781,7 @@
             })
             this.historyLog.unshift(`[${time}] ${msg}`)
           },
+
           animateValue(type, target) {
             const start =
               type === 'energy' ? this.animatedEnergy : this.animatedFat
@@ -724,6 +799,7 @@
               }
             })
           },
+
           initChart() {
             const dom = document.getElementById('mainChart')
             if (!dom) return
@@ -731,6 +807,7 @@
             this.chartInstance = echarts.init(dom)
             this.updateChart()
           },
+
           updateChart() {
             if (!this.chartInstance) return
             if (this.candidates.length === 0) {
@@ -791,6 +868,7 @@
               ]
             })
           },
+
           runEntryAnimation() {
             const cards = document.querySelectorAll('.dish-card')
             if (cards.length) {
@@ -803,6 +881,7 @@
               })
             }
           },
+
           playAudio() {
             if (this.audioPlayed) return
             const audio = document.getElementById('welcome-audio')
@@ -821,10 +900,17 @@
           window.addEventListener('resize', () => {
             if (this.chartInstance) this.chartInstance.resize()
           })
-          // 初始化从后端加载候选方案
-          await this.fetchCandidates()
+          // 初始加载候选方案
+          await this.fetchCandidates(false)
+          // 初始化图表
+          this.$nextTick(() => this.initChart())
+          // 根据初始tab决定是否开启轮询 (若默认在统计区则启动)
+          if (this.currentTab === 'stats') {
+            this.startPollingStats()
+          }
         },
         beforeDestroy() {
+          this.stopPollingStats()
           if (this.chartInstance) {
             this.chartInstance.dispose()
             this.chartInstance = null
