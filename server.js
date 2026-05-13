@@ -79,6 +79,15 @@ app.delete('/api/candidates/:id', async (req, res) => {
   }
 })
 
+app.delete('/api/reset', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM candidates')
+    res.json({ message: '数据库已重置' })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
 app.post('/api/vote', async (req, res) => {
   const { candidate_id, gender } = req.body
   const column = gender === 'male' ? 'male_votes' : 'female_votes'
