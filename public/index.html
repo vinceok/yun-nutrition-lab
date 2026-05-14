@@ -440,7 +440,24 @@
                 </div>
                 <div>
                   <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-sm mb-1">{{ dish.name }}</h3>
+                    <h3 class="font-bold text-sm mb-1 flex item-center">
+                      <span
+                        class="dot"
+                        style="
+                          margin-right: 4px;
+                          width: 18px;
+                          height: 18px;
+                          line-height: 18px;
+                          background-color: #009944;
+                          color: #fff;
+                          font-size: 12px;
+                          text-align: center;
+                          border-radius: 20px;
+                        "
+                        >{{dish.id}}</span
+                      >
+                      {{ dish.name.substring(1, dish.name.length) }}
+                    </h3>
                     <div
                       class="w-6 h-6 rounded-full border-2 border-gray-100 flex items-center justify-center transition-all">
                       <div
@@ -675,8 +692,8 @@
               <span class="text-green-600 font-bold">达标</span>
             </div>
             <div class="flex justify-between text-xs">
-              <span>♂ {{ c.male_votes }}</span>
-              <span>♀ {{ c.female_votes }}</span>
+              <span>♂男生喜欢 {{ c.male_votes }}</span>
+              <span>♀女生喜欢 {{ c.female_votes }}</span>
               <span class="font-bold">总计: {{ c.total_votes }}</span>
             </div>
           </div>
