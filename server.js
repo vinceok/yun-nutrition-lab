@@ -79,7 +79,7 @@ app.delete('/api/candidates/:id', async (req, res) => {
   }
 })
 
-app.delete('/api/reset', async (req, res) => {
+app.post('/api/reset', async (req, res) => {
   try {
     await pool.query('DELETE FROM candidates')
     res.json({ message: '数据库已重置' })
