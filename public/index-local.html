@@ -14,7 +14,6 @@
     <script src="./lib/anime.min.js"></script>
     <script src="./lib/echarts.min.js"></script>
     <script src="./lib/vue.min.js"></script>
-    <script src="./lib/axios.min.js"></script>
   </head>
   <body>
     <div id="app">
@@ -381,7 +380,40 @@
     </div>
 
     <script>
-      const API_BASE = 'https://yun-nutrition-lab.onrender.com/api'
+      // 本地存储工具函数
+      const LocalStorageManager = {
+        // 存储候选方案
+        saveCandidates(candidates) {
+          localStorage.setItem(
+            'nutritionLab_candidates',
+            JSON.stringify(candidates)
+          )
+        },
+
+        // 获取候选方案
+        getCandidates() {
+          const data = localStorage.getItem('nutritionLab_candidates')
+          return data ? JSON.parse(data) : []
+        },
+
+        // 存储投票数据
+        saveVotes(votes) {
+          localStorage.setItem('nutritionLab_votes', JSON.stringify(votes))
+        },
+
+        // 获取投票数据
+        getVotes() {
+          const data = localStorage.getItem('nutritionLab_votes')
+          return data ? JSON.parse(data) : {}
+        },
+
+        // 重置所有数据
+        resetAll() {
+          localStorage.removeItem('nutritionLab_candidates')
+          localStorage.removeItem('nutritionLab_votes')
+        }
+      }
+
       new Vue({
         el: '#app',
         data: {
@@ -553,15 +585,20 @@
           }
         },
         methods: {
-          // 权限控制: 非管理员不能调用重置、删除API
           async fetchCandidates(silent) {
             if (!silent) this.loading = true
             try {
-              const res = await axios.get(`${API_BASE}/candidates`)
-              this.candidates = res.data || []
+              // 从本地存储获取数据
+              this.candidates = LocalStorageManager.getCandidates()
+
+              // 为现有候选人添加默认投票数据
+              const votes = LocalStorageManager.getVotes()
+              this.candidates.forEach(candidate => {
+                candidate.male_votes = votes[candidate.id]?.male || 0
+                candidate.female_votes = votes[candidate.id]?.female || 0
+              })
             } catch (err) {
               console.error(err)
-              if (!silent) alert('网络错误')
             } finally {
               if (!silent) this.loading = false
             }
@@ -575,32 +612,64 @@
                 .sort((a, b) => a - b)
                 .join(','),
               t = this.currentTotals
-            try {
-              await axios.post(`${API_BASE}/candidates`, {
-                names,
-                dish_ids,
-                energy: t.energy,
-                fat: t.fat
-              })
-              alert('方案已保存！可前往"统计区"查看并投票。')
-              await this.fetchCandidates(false)
-              this.selected = []
-              this.historyLog = []
-            } catch (err) {
-              alert(
-                err.response?.status === 409
-                  ? '该方案已在候选名单中！'
-                  : '保存失败'
-              )
+
+            // 检查是否已存在相同的组合
+            const existingCandidate = this.candidates.find(
+              c => c.dish_ids === dish_ids
+            )
+
+            if (existingCandidate) {
+              alert('该方案已在候选名单中！')
+              return
             }
+
+            // 创建新的候选方案
+            const newCandidate = {
+              id: Date.now(), // 使用时间戳作为唯一ID
+              names,
+              dish_ids,
+              energy: t.energy,
+              fat: t.fat,
+              male_votes: 0,
+              female_votes: 0
+            }
+
+            // 添加到本地存储
+            const updatedCandidates = [...this.candidates, newCandidate]
+            LocalStorageManager.saveCandidates(updatedCandidates)
+
+            // 更新本地数据
+            this.candidates = updatedCandidates
+
+            alert('方案已保存！可前往"统计区"查看并投票。')
+            this.selected = []
+            this.historyLog = []
           },
           async voteFor(candidateId, gender) {
             try {
-              await axios.post(`${API_BASE}/vote`, {
-                candidate_id: candidateId,
-                gender
-              })
-              await this.fetchCandidates(true)
+              // 获取当前投票数据
+              const votes = LocalStorageManager.getVotes()
+
+              // 更新特定候选人的投票
+              if (!votes[candidateId]) {
+                votes[candidateId] = { male: 0, female: 0 }
+              }
+
+              votes[candidateId][gender] = (votes[candidateId][gender] || 0) + 1
+
+              // 保存更新后的投票数据
+              LocalStorageManager.saveVotes(votes)
+
+              // 更新本地候选人数据
+              const candidateIndex = this.candidates.findIndex(
+                c => c.id === candidateId
+              )
+              if (candidateIndex !== -1) {
+                this.candidates[candidateIndex][`${gender}_votes`] =
+                  votes[candidateId][gender]
+                // 强制更新视图
+                this.candidates = [...this.candidates]
+              }
             } catch (err) {
               alert('投票失败')
             }
@@ -609,33 +678,53 @@
             if (!this.isAdmin) return
             if (!confirm('确定删除吗？')) return
             try {
-              await axios.delete(`${API_BASE}/candidates/${candidateId}`)
-              await this.fetchCandidates(false)
+              // 从本地存储中移除候选人
+              const updatedCandidates = this.candidates.filter(
+                c => c.id !== candidateId
+              )
+              LocalStorageManager.saveCandidates(updatedCandidates)
+
+              // 同时删除相关的投票数据
+              const votes = LocalStorageManager.getVotes()
+              delete votes[candidateId]
+              LocalStorageManager.saveVotes(votes)
+
+              // 更新本地数据
+              this.candidates = updatedCandidates
             } catch (err) {
               alert('删除失败')
             }
           },
           startPollingStats() {
-            if (this.pollingTimer) clearTimeout(this.pollingTimer)
-            this.silentPollFetch()
-            const poll = async () => {
-              await this.silentPollFetch()
-              if (this.currentTab === 'stats')
-                this.pollingTimer = setTimeout(poll, this.pollIntervalMs)
-            }
-            this.pollingTimer = setTimeout(poll, this.pollIntervalMs)
+            // 设置定时器定期更新本地数据
+            this.pollingTimer = setInterval(() => {
+              if (this.currentTab === 'stats') {
+                // 重新获取本地存储的数据
+                this.candidates = LocalStorageManager.getCandidates()
+
+                // 更新投票数据
+                const votes = LocalStorageManager.getVotes()
+                this.candidates.forEach(candidate => {
+                  candidate.male_votes = votes[candidate.id]?.male || 0
+                  candidate.female_votes = votes[candidate.id]?.female || 0
+                })
+              }
+            }, this.pollIntervalMs)
           },
           async silentPollFetch() {
-            try {
-              const res = await axios.get(`${API_BASE}/candidates`)
-              this.candidates = res.data || []
-            } catch (e) {
-              console.warn(e)
-            }
+            // 从本地存储获取数据
+            this.candidates = LocalStorageManager.getCandidates()
+
+            // 更新投票数据
+            const votes = LocalStorageManager.getVotes()
+            this.candidates.forEach(candidate => {
+              candidate.male_votes = votes[candidate.id]?.male || 0
+              candidate.female_votes = votes[candidate.id]?.female || 0
+            })
           },
           stopPollingStats() {
             if (this.pollingTimer) {
-              clearTimeout(this.pollingTimer)
+              clearInterval(this.pollingTimer)
               this.pollingTimer = null
             }
           },
@@ -727,10 +816,14 @@
               return
             this.resetLoading = true
             try {
-              await axios.post(`${API_BASE}/reset`)
+              // 清空本地存储
+              LocalStorageManager.resetAll()
+
+              // 重置应用状态
               this.selected = []
               this.historyLog = []
-              await this.fetchCandidates(false)
+              this.candidates = []
+
               alert('实验已重置成功！')
             } catch (err) {
               alert('重置失败')
