@@ -1,0 +1,58 @@
+/* ========== 实验区布局 ========== */
+#experiment-main {
+  height: calc(100vh - 64px);
+  display: flex;
+  overflow: hidden;
+}
+
+.dish-list-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.2rem 1.5rem;
+  max-height: 100%;
+}
+
+.dish-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.dish-card {
+  width: 100%;
+  min-width: 110px;
+  padding: 0.75rem !important;
+  transition: all 0.3s ease;
+}
+.dish-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.1);
+}
+.dish-card.selected {
+  border-color: #ff5600 !important;
+  background-color: #fff7f2;
+}
+
+.analysis-panel {
+  width: 290px;
+  flex-shrink: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+/* 实验区专用响应式 */
+@media screen and (max-width: 1440px) {
+  .analysis-panel { width: 270px; }
+  .dish-card { min-width: 100px; }
+}
+@media screen and (max-width: 1280px) {
+  .dish-grid { gap: 0.6rem; }
+  .dish-card { padding: 0.6rem !important; }
+  .dish-card h3 { font-size: 0.85rem !important; }
+  .dish-card p { font-size: 0.7rem !important; }
+}
+@media screen and (max-width: 1024px) {
+  .dish-list-container { padding: 1rem; }
+  .analysis-panel { width: 250px; }
+}

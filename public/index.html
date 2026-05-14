@@ -6,335 +6,15 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>营养午餐实验室 - 健康配餐</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: '#FF5600',
-              secondary: '#74706E',
-              accent: '#FF8941',
-              bgMain: '#F4F3EC',
-              cardBg: '#FFFFFF'
-            }
-          }
-        }
-      }
-    </script>
+    <!-- 样式拆分引入 -->
+    <link rel="stylesheet" href="./style/base.css" />
+    <link rel="stylesheet" href="./style/lab.css" />
+    <link rel="stylesheet" href="./style/stats.css" />
+    <!-- 第三方库 -->
     <script src="./lib/anime.min.js"></script>
     <script src="./lib/echarts.min.js"></script>
     <script src="./lib/vue.min.js"></script>
     <script src="./lib/axios.min.js"></script>
-    <style>
-      body {
-        font-family: 'Noto Sans SC', sans-serif;
-        background-color: #f4f3ec;
-        color: #0c0302;
-        margin: 0;
-        line-height: 1.5;
-        overflow: hidden;
-        height: 100vh;
-        width: 100vw;
-        box-sizing: border-box;
-      }
-      *,
-      *::before,
-      *::after {
-        box-sizing: inherit;
-      }
-      .dish-card {
-        transition: all 0.3s ease;
-      }
-      .dish-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.1);
-      }
-      .dish-card.selected {
-        border-color: #ff5600 !important;
-        background-color: #fff7f2;
-      }
-      .progress-fill {
-        transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      .glass-nav {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-      }
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 5px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #e5e7eb;
-        border-radius: 10px;
-      }
-      .history-card {
-        background: white;
-        border-radius: 0.8rem;
-        padding: 0.5rem;
-        border: 1px solid #eee;
-        box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.05);
-        position: relative;
-        margin-bottom: 0.5rem;
-      }
-      .history-card:last-child {
-        margin-bottom: 0;
-      }
-      .btn-pulse {
-        animation: pulse 2s infinite;
-      }
-      @keyframes pulse {
-        0% {
-          box-shadow: 0 0 0 0 rgba(255, 86, 0, 0.4);
-        }
-        70% {
-          box-shadow: 0 0 0 8px rgba(255, 86, 0, 0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(255, 86, 0, 0);
-        }
-      }
-      .tab-btn.active {
-        background-color: #ff5600;
-        color: white;
-        box-shadow: 0 3px 8px rgba(255, 86, 0, 0.2);
-      }
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        padding: 1rem; /* 增加边距，避免小屏贴边 */
-      }
-      .modal-content {
-        background: white;
-        border-radius: 1rem;
-        width: 100%;
-        max-width: 800px; /* 调整最大宽度，适配笔记本 */
-        max-height: 85vh; /* 调整最大高度，确保完全展现 */
-        overflow-y: auto;
-        padding: 1.5rem;
-        position: relative;
-        margin: auto; /* 双重居中保障 */
-      }
-      .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-      }
-      .modal-title {
-        font-size: 1.3rem;
-        font-weight: bold;
-        color: #0c0302;
-      }
-      .close-modal {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: #777;
-      }
-      .chart-container {
-        height: 400px; /* 调整图表高度，适配弹窗 */
-        width: 100%;
-      }
-
-      /* ========== 布局适配核心样式 ========== */
-      #experiment-main {
-        height: calc(100vh - 64px);
-        display: flex;
-        overflow: hidden;
-      }
-      .dish-list-container {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1.2rem 1.5rem;
-        max-height: 100%;
-      }
-      .dish-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 0.8rem;
-        width: 100%;
-      }
-      .dish-card {
-        width: 100%;
-        min-width: 110px;
-        padding: 0.75rem !important;
-      }
-      #stats-main {
-        height: calc(100vh - 64px);
-        display: flex;
-        overflow: hidden;
-      }
-      .stats-vote-container {
-        flex: 1;
-        padding: 1rem;
-        max-height: 100%;
-        overflow-y: auto;
-      }
-      .stats-top6-container {
-        width: 300px;
-        flex-shrink: 0;
-        padding: 1rem;
-        max-height: 100%;
-        overflow-y: auto;
-        background: white;
-        border-left: 1px solid #eee;
-      }
-      .analysis-panel {
-        width: 290px;
-        flex-shrink: 0;
-        max-height: 100%;
-        overflow-y: auto;
-      }
-      .clickable-btn {
-        min-width: 44px;
-        /* min-height: 44px; */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      /* ========== 头部导航 - 强制单行布局 ========== */
-      .header-container {
-        padding: 0.5rem 1rem !important;
-        flex-wrap: nowrap !important;
-        gap: 1rem !important;
-        height: 64px;
-      }
-      .header-right {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        flex-shrink: 0;
-      }
-      .header-btn {
-        padding: 0.4rem 0.8rem !important;
-        font-size: 0.8rem !important;
-      }
-      .health-target {
-        font-size: 0.7rem !important;
-        white-space: nowrap;
-      }
-
-      /* ========== 统计区投票卡片 - 强制一行3个 ========== */
-      .vote-card-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); /* 固定3列布局 */
-        gap: 0.6rem; /* 减小间距，适配3列 */
-        width: 100%;
-      }
-      .vote-card {
-        padding: 0.8rem !important; /* 减小内边距 */
-      }
-      .vote-card-title {
-        font-size: 0.75rem !important; /* 减小标题字号 */
-        margin-bottom: 0.5rem !important;
-      }
-      .vote-card-info {
-        font-size: 0.65rem !important; /* 减小信息字号 */
-        margin-bottom: 0.5rem !important;
-      }
-      .vote-btn {
-        padding: 0.4rem 0.2rem !important; /* 减小按钮内边距 */
-        font-size: 0.65rem !important; /* 减小按钮字号 */
-      }
-
-      /* ========== 媒体查询 - 适配小屏 ========== */
-      @media screen and (max-width: 1440px) {
-        .analysis-panel {
-          width: 270px;
-        }
-        .stats-top6-container {
-          width: 280px;
-        }
-        .chart-container {
-          height: 350px;
-        }
-        .dish-card {
-          min-width: 100px;
-        }
-      }
-      @media screen and (max-width: 1280px) {
-        .dish-grid {
-          gap: 0.6rem;
-        }
-        .dish-card {
-          padding: 0.6rem !important;
-        }
-        .dish-card h3 {
-          font-size: 0.85rem !important;
-        }
-        .dish-card p {
-          font-size: 0.7rem !important;
-        }
-        /* .health-target {
-          display: none !important;
-        } */
-        /* 1280px以下投票卡片仍保持3列，进一步压缩尺寸 */
-        .vote-card-grid {
-          gap: 0.5rem;
-        }
-        .vote-card {
-          padding: 0.6rem !important;
-        }
-        .vote-card-title {
-          font-size: 0.7rem !important;
-        }
-        .vote-card-info {
-          font-size: 0.6rem !important;
-        }
-        .vote-btn {
-          padding: 0.3rem 0.15rem !important;
-          font-size: 0.6rem !important;
-        }
-      }
-      @media screen and (max-width: 1024px) {
-        .dish-list-container {
-          padding: 1rem;
-        }
-        .analysis-panel {
-          width: 250px;
-        }
-        .stats-top6-container {
-          width: 260px;
-        }
-        .modal-content {
-          padding: 1.2rem;
-          max-height: 90vh;
-        }
-        .header-btn {
-          padding: 0.35rem 0.7rem !important;
-          font-size: 0.75rem !important;
-        }
-        /* 1024px平板横屏仍保持3列，极限压缩 */
-        .vote-card-grid {
-          gap: 0.4rem;
-        }
-        .vote-card {
-          padding: 0.5rem !important;
-        }
-        .vote-card-title {
-          font-size: 0.65rem !important;
-        }
-        .vote-card-info {
-          font-size: 0.55rem !important;
-        }
-        .vote-btn {
-          padding: 0.25rem 0.1rem !important;
-          font-size: 0.55rem !important;
-        }
-      }
-    </style>
   </head>
   <body>
     <div id="app">
@@ -379,7 +59,9 @@
                 >热量 ≥ 2926kJ | 脂肪 ≤ 50g</span
               >
             </div>
+            <!-- 重置实验按钮 - 仅管理员可见 -->
             <button
+              v-if="isAdmin"
               @click="resetAll"
               :disabled="resetLoading"
               class="clickable-btn px-3 py-1 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-1 header-btn"
@@ -440,7 +122,7 @@
                 </div>
                 <div>
                   <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-sm mb-1 flex item-center">
+                    <h3 class="font-bold text-sm mb-1 flex items-center">
                       <span
                         class="dot"
                         style="
@@ -510,7 +192,6 @@
               </div>
             </div>
             <div class="space-y-3">
-              <!-- 热量 -->
               <div>
                 <div class="flex justify-between items-end mb-1">
                   <span class="text-xs font-bold text-secondary"
@@ -535,7 +216,6 @@
                   <span>0</span><span>目标: 2926</span>
                 </div>
               </div>
-              <!-- 脂肪 -->
               <div>
                 <div class="flex justify-between items-end mb-1">
                   <span class="text-xs font-bold text-secondary"
@@ -605,7 +285,6 @@
         v-show="currentTab === 'stats'"
         id="stats-main"
         class="flex overflow-hidden">
-        <!-- 投票结果区域 - 强制一行3个 -->
         <section class="stats-vote-container custom-scrollbar">
           <div class="w-full flex-1 flex flex-col h-full">
             <h2 class="text-base font-bold flex items-center gap-2 mb-3">
@@ -628,7 +307,9 @@
                   <div
                     class="vote-card-info text-secondary flex justify-between align-center">
                     <span>🔥 {{ c.energy }}kJ · 🥩 {{ c.fat }}g</span>
+                    <!-- 删除按钮 - 仅管理员可见 -->
                     <button
+                      v-if="isAdmin"
                       @click="removeCandidate(c.id)"
                       class="py-0.5 px-1 bg-red-500 text-white rounded-md font-bold hover:bg-red-600 transition-all shadow-sm clickable-btn">
                       删除
@@ -647,7 +328,7 @@
                     </button>
                     <button
                       class="vote-btn flex-1 text-primary rounded-md font-bold transition-all shadow-sm clickable-btn border border-orange-300">
-                      总计 {{ c.male_votes +c.female_votes }}
+                      总计 {{ c.male_votes + c.female_votes }}
                     </button>
                   </div>
                 </div>
@@ -660,7 +341,6 @@
             </div>
           </div>
         </section>
-        <!-- TOP6搭配方案区域 - 达标移至第二行右侧 -->
         <aside class="stats-top6-container custom-scrollbar">
           <h2 class="text-base font-bold flex items-center gap-2 mb-3">
             <span
@@ -681,20 +361,19 @@
           </div>
           <div v-for="c in topSixCandidates" :key="c.id" class="history-card">
             <div class="mb-1">
-              <span class="font-bold text-xs pr-2 text-gray-800">
-                {{ c.names }}</span
+              <span class="font-bold text-xs pr-2 text-gray-800"
+                >{{ c.names }}</span
               >
             </div>
             <div class="flex justify-between items-center text-xs mb-1">
               <span class="text-secondary"
                 >🔥 {{ c.energy }}kJ · 🥩 {{ c.fat }}g</span
-              >
-              <span class="text-green-600 font-bold">达标</span>
+              ><span class="text-green-600 font-bold">达标</span>
             </div>
             <div class="flex justify-between text-xs">
-              <span>♂男生喜欢 {{ c.male_votes }}</span>
-              <span>♀女生喜欢 {{ c.female_votes }}</span>
-              <span class="font-bold">总计: {{ c.total_votes }}</span>
+              <span>♂男生喜欢 {{ c.male_votes }}</span
+              ><span>♀女生喜欢 {{ c.female_votes }}</span
+              ><span class="font-bold">总计: {{ c.total_votes }}</span>
             </div>
           </div>
         </aside>
@@ -703,7 +382,6 @@
 
     <script>
       const API_BASE = 'https://yun-nutrition-lab.onrender.com/api'
-
       new Vue({
         el: '#app',
         data: {
@@ -721,6 +399,7 @@
           pollIntervalMs: 2000,
           pollingTimer: null,
           silentPolling: false,
+          isAdmin: false, // 管理员标志
           dishes: [
             {
               id: 1,
@@ -827,9 +506,11 @@
               : '#FDBA74'
           },
           canSave() {
-            if (this.selected.length < 3) return false
-            const t = this.currentTotals
-            return t.energy >= this.TARGET.energy && t.fat <= this.TARGET.fat
+            return (
+              this.selected.length >= 3 &&
+              this.currentTotals.energy >= this.TARGET.energy &&
+              this.currentTotals.fat <= this.TARGET.fat
+            )
           },
           aiFeedback() {
             if (this.selected.length < 3)
@@ -843,10 +524,7 @@
           },
           topSixCandidates() {
             return this.candidates
-              .map(c => ({
-                ...c,
-                total_votes: c.male_votes + c.female_votes
-              }))
+              .map(c => ({ ...c, total_votes: c.male_votes + c.female_votes }))
               .sort((a, b) => b.total_votes - a.total_votes)
               .slice(0, 6)
           }
@@ -862,74 +540,41 @@
           candidates: {
             deep: true,
             handler() {
-              this.$nextTick(() => this.updateChart())
+              this.$nextTick(() => this.updateStatsChart?.())
             }
           },
-          currentTab(newTab, oldTab) {
+          currentTab(newTab) {
             if (newTab === 'stats') {
               this.startPollingStats()
               this.$nextTick(() => {
-                if (this.chartInstance) {
-                  this.chartInstance.resize()
-                }
+                if (this.statsChartInstance) this.statsChartInstance.resize()
               })
-            } else if (oldTab === 'stats') {
-              this.stopPollingStats()
-            }
+            } else if (newTab !== 'stats') this.stopPollingStats()
           }
         },
         methods: {
-          async fetchCandidates(silent = false) {
-            if (!silent) {
-              this.loading = true
-            }
+          // 权限控制: 非管理员不能调用重置、删除API
+          async fetchCandidates(silent) {
+            if (!silent) this.loading = true
             try {
               const res = await axios.get(`${API_BASE}/candidates`)
-              const newList = res.data || []
-              if (!this.isCandidatesEqual(this.candidates, newList)) {
-                this.candidates = newList
-              }
+              this.candidates = res.data || []
             } catch (err) {
-              console.error('获取候选方案失败', err)
-              if (!silent) {
-                alert('网络错误，无法加载候选方案，请刷新重试。')
-              }
+              console.error(err)
+              if (!silent) alert('网络错误')
             } finally {
-              if (!silent) {
-                this.loading = false
-              }
+              if (!silent) this.loading = false
             }
           },
-
-          isCandidatesEqual(arrA, arrB) {
-            if (!arrA && !arrB) return true
-            if (!arrA || !arrB) return false
-            if (arrA.length !== arrB.length) return false
-            const sortedA = [...arrA].sort((a, b) => a.id - b.id)
-            const sortedB = [...arrB].sort((a, b) => a.id - b.id)
-            for (let i = 0; i < sortedA.length; i++) {
-              const a = sortedA[i]
-              const b = sortedB[i]
-              if (a.id !== b.id) return false
-              if (a.names !== b.names) return false
-              if (a.energy !== b.energy) return false
-              if (a.fat !== b.fat) return false
-              if (a.male_votes !== b.male_votes) return false
-              if (a.female_votes !== b.female_votes) return false
-              if (a.dish_ids !== b.dish_ids) return false
-            }
-            return true
-          },
-
           async saveCombination() {
             if (!this.canSave) return
-            const selectedDishes = this.selectedDishes
-            const names = selectedDishes.map(d => d.name).join('+')
-            const dish_ids = selectedDishes
-              .map(d => d.id)
-              .sort((a, b) => a - b)
-              .join(',')
-            const t = this.currentTotals
+            const selectedDishes = this.selectedDishes,
+              names = selectedDishes.map(d => d.name).join('+'),
+              dish_ids = selectedDishes
+                .map(d => d.id)
+                .sort((a, b) => a - b)
+                .join(','),
+              t = this.currentTotals
             try {
               await axios.post(`${API_BASE}/candidates`, {
                 names,
@@ -939,17 +584,16 @@
               })
               alert('方案已保存！可前往"统计区"查看并投票。')
               await this.fetchCandidates(false)
-              this.resetLocalData()
+              this.selected = []
+              this.historyLog = []
             } catch (err) {
-              if (err.response && err.response.status === 409) {
-                alert('该方案已在候选名单中！')
-              } else {
-                console.error('保存失败', err)
-                alert('保存失败，请稍后重试。')
-              }
+              alert(
+                err.response?.status === 409
+                  ? '该方案已在候选名单中！'
+                  : '保存失败'
+              )
             }
           },
-
           async voteFor(candidateId, gender) {
             try {
               await axios.post(`${API_BASE}/vote`, {
@@ -958,65 +602,49 @@
               })
               await this.fetchCandidates(true)
             } catch (err) {
-              console.error('投票失败', err)
-              alert('投票失败，请稍后重试。')
+              alert('投票失败')
             }
           },
-
           async removeCandidate(candidateId) {
-            if (!confirm('确定要删除这个候选方案吗？')) return
+            if (!this.isAdmin) return
+            if (!confirm('确定删除吗？')) return
             try {
               await axios.delete(`${API_BASE}/candidates/${candidateId}`)
               await this.fetchCandidates(false)
             } catch (err) {
-              console.error('删除失败', err)
-              alert('删除失败，请稍后重试。')
+              alert('删除失败')
             }
           },
-
           startPollingStats() {
-            if (this.pollingTimer) {
-              this.stopPollingStats()
-            }
+            if (this.pollingTimer) clearTimeout(this.pollingTimer)
             this.silentPollFetch()
-            this.schedulePoll()
-          },
-
-          schedulePoll() {
-            this.pollingTimer = setTimeout(async () => {
+            const poll = async () => {
               await this.silentPollFetch()
-              if (this.currentTab === 'stats') {
-                this.schedulePoll()
-              }
-            }, this.pollIntervalMs)
+              if (this.currentTab === 'stats')
+                this.pollingTimer = setTimeout(poll, this.pollIntervalMs)
+            }
+            this.pollingTimer = setTimeout(poll, this.pollIntervalMs)
           },
-
           async silentPollFetch() {
             try {
               const res = await axios.get(`${API_BASE}/candidates`)
-              const newList = res.data || []
-              if (!this.isCandidatesEqual(this.candidates, newList)) {
-                this.candidates = newList
-              }
-            } catch (err) {
-              console.warn('静默轮询获取数据失败', err)
+              this.candidates = res.data || []
+            } catch (e) {
+              console.warn(e)
             }
           },
-
           stopPollingStats() {
             if (this.pollingTimer) {
               clearTimeout(this.pollingTimer)
               this.pollingTimer = null
             }
           },
-
           openStatsModal() {
             this.showStatsModal = true
             this.$nextTick(() => {
               this.initStatsChart()
             })
           },
-
           closeStatsModal() {
             this.showStatsModal = false
             if (this.statsChartInstance) {
@@ -1024,69 +652,31 @@
               this.statsChartInstance = null
             }
           },
-
           initStatsChart() {
             const dom = document.getElementById('statsChart')
             if (!dom) return
-
-            if (this.statsChartInstance) {
-              this.statsChartInstance.dispose()
-            }
-
+            if (this.statsChartInstance) this.statsChartInstance.dispose()
             this.statsChartInstance = echarts.init(dom)
             this.updateStatsChart()
-
-            window.addEventListener('resize', () => {
-              if (this.statsChartInstance) {
-                this.statsChartInstance.resize()
-              }
-            })
+            window.addEventListener('resize', () =>
+              this.statsChartInstance?.resize()
+            )
           },
-
           updateStatsChart() {
             if (!this.statsChartInstance) return
-
             const top6 = this.topSixCandidates
-
-            if (top6.length === 0) {
+            if (!top6.length) {
               this.statsChartInstance.clear()
               return
             }
-
-            const chartOption = {
-              title: {
-                text: '',
-                left: 'center',
-                top: '2%',
-                textStyle: {
-                  fontSize: 18,
-                  color: '#0C0302',
-                  fontWeight: 'bold'
-                }
-              },
-              tooltip: {
-                trigger: 'axis',
-                axisPointer: {
-                  type: 'shadow'
-                }
-              },
-              legend: {
-                data: ['男生', '女生'],
-                orient: 'horizontal',
-                right: 'center',
-                top: '0',
-                itemGap: 20,
-                itemWidth: 20,
-                itemHeight: 20,
-                textStyle: {
-                  fontSize: 14
-                }
-              },
+            this.statsChartInstance.setOption({
+              tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+              legend: { data: ['男生', '女生'], top: 0, right: 'center' },
               grid: {
                 left: '3%',
                 right: '4%',
-                bottom: '0%',
                 top: '15%',
+                bottom: '3%',
                 containLabel: true
               },
               xAxis: {
@@ -1094,38 +684,15 @@
                 data: top6.map(c => c.names),
                 axisLabel: {
                   fontSize: 12,
-                  fontWeight: 'bold',
-                  lineHeight: 18,
-                  interval: 0,
-                  margin: 10,
-                  formatter: function (value) {
-                    let result = ''
-                    const maxLength = 6
-                    for (let i = 0; i < value.length; i += maxLength) {
-                      result += value.substr(i, maxLength) + '\n'
-                    }
-                    return result
-                  }
+                  formatter: val => val.replace(/\+/g, '+\n') // 在每个+号后添加换行符
                 }
               },
-              yAxis: {
-                type: 'value',
-                name: '票数',
-                nameTextStyle: {
-                  fontSize: 14,
-                  padding: [0, 0, 8, -5]
-                },
-                minInterval: 1,
-                axisLabel: {
-                  fontSize: 12
-                }
-              },
+              yAxis: { type: 'value', name: '票数', minInterval: 1 },
               series: [
                 {
                   name: '男生',
                   type: 'bar',
                   data: top6.map(c => c.male_votes),
-                  barMaxWidth: 50,
                   itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                       { offset: 0, color: '#60a5fa' },
@@ -1133,126 +700,86 @@
                     ]),
                     borderRadius: [0, 0, 0, 0]
                   },
-                  label: {
-                    show: true,
-                    position: 'top',
-                    fontSize: 12,
-                    fontWeight: 'bold'
-                  }
+                  label: { show: true, position: 'top' }
                 },
                 {
                   name: '女生',
                   type: 'bar',
                   data: top6.map(c => c.female_votes),
-                  barMaxWidth: 50,
                   itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                       { offset: 0, color: '#f9a8d4' },
                       { offset: 1, color: '#ec4899' }
-                    ]),
-                    borderRadius: [0, 0, 0, 0]
+                    ])
                   },
-                  label: {
-                    show: true,
-                    position: 'top',
-                    fontSize: 12,
-                    fontWeight: 'bold'
-                  }
+                  label: { show: true, position: 'top' }
                 }
               ]
-            }
-            this.statsChartInstance.setOption(chartOption)
+            })
           },
-
-          // 重置实验增加确认功能
           async resetAll() {
-            // 二次确认弹窗
+            if (!this.isAdmin) return
             if (
               !confirm(
                 '确定要重置实验吗？所有搭配方案和投票数据将被清空，此操作不可恢复！'
               )
-            ) {
+            )
               return
-            }
-
             this.resetLoading = true
             try {
               await axios.post(`${API_BASE}/reset`)
-              this.resetLocalData()
+              this.selected = []
+              this.historyLog = []
               await this.fetchCandidates(false)
-              alert('实验已重置成功！所有搭配方案已清空。')
+              alert('实验已重置成功！')
             } catch (err) {
-              console.error('重置实验失败', err)
-              alert('重置失败，请稍后重试！')
+              alert('重置失败')
             } finally {
               this.resetLoading = false
             }
           },
-
-          resetLocalData() {
-            this.selected = []
-            this.historyLog = []
-            this.animatedEnergy = 0
-            this.animatedFat = 0
-          },
-
           animateValue(type, target) {
             const start =
               this[`animated${type.charAt(0).toUpperCase() + type.slice(1)}`]
-            const duration = 800
             const startTime = performance.now()
-
-            const animate = currentTime => {
-              const elapsed = currentTime - startTime
-              const progress = Math.min(elapsed / duration, 1)
-              const easeProgress = progress * (2 - progress)
-              const currentValue = Math.floor(
-                start + (target - start) * easeProgress
-              )
-
+            const animate = now => {
+              const elapsed = now - startTime,
+                progress = Math.min(elapsed / 800, 1)
+              const ease = progress * (2 - progress)
+              const cur = Math.floor(start + (target - start) * ease)
               this[`animated${type.charAt(0).toUpperCase() + type.slice(1)}`] =
-                currentValue
-
-              if (progress < 1) {
-                requestAnimationFrame(animate)
-              } else {
+                cur
+              if (progress < 1) requestAnimationFrame(animate)
+              else
                 this[
                   `animated${type.charAt(0).toUpperCase() + type.slice(1)}`
                 ] = target
-              }
             }
-
             requestAnimationFrame(animate)
           },
-
           switchTab(tab) {
             this.currentTab = tab
           },
-
           toggleDish(id) {
-            if (this.selected.includes(id)) {
+            if (this.selected.includes(id))
               this.selected = this.selected.filter(d => d !== id)
-            } else {
-              if (this.selected.length < 3) {
-                this.selected.push(id)
-              } else {
-                alert('最多只能选择3道菜哦！')
-              }
-            }
+            else if (this.selected.length < 3) this.selected.push(id)
+            else alert('最多只能选择3道菜哦！')
           },
-
-          updateChart() {
-            // 预留图表更新逻辑
+          // 解析URL参数
+          parseAdminParam() {
+            const params = new URLSearchParams(window.location.search)
+            const adminVal = params.get('isAdmin')
+            this.isAdmin = adminVal === '6ff6acbf473abbc6'
           }
         },
         mounted() {
+          this.parseAdminParam()
           this.fetchCandidates(false)
         },
         beforeDestroy() {
           this.stopPollingStats()
-          if (this.statsChartInstance) {
-            this.statsChartInstance.dispose()
-          }
+          if (this.statsChartInstance) this.statsChartInstance.dispose()
         }
       })
     </script>
