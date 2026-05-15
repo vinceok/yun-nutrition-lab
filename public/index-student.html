@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" style="font-size: 16px">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -242,15 +242,7 @@
               </div>
             </div>
             <div class="mt-3" style="padding-top: 24px">
-              <!-- <button
-                @click="saveCombination"
-                :disabled="!canSave"
-                :class="['w-full py-2.5 rounded-xl bg-primary text-white font-bold transition-all shadow-lg clickable-btn', canSave ? 'btn-pulse' : 'opacity-50 cursor-not-allowed']">
-                保存为候选方案
-              </button> -->
               <button
-                @click="saveCombination"
-                :disabled="!canSave"
                 :class="['w-full py-2.5 rounded-xl text-white font-bold transition-all shadow-lg clickable-btn', saveBtnClass]">
                 {{saveBtnText}}
               </button>
@@ -711,9 +703,7 @@
                 type: 'category',
                 data: top6.map(c => c.names),
                 axisLabel: {
-                  fontSize: 13,
-                  lineHeight: 18,
-                  interval: 0,
+                  fontSize: 12,
                   formatter: val => val.replace(/\+/g, '+\n') // 在每个+号后添加换行符
                 }
               },
@@ -723,43 +713,26 @@
                   name: '男生',
                   type: 'bar',
                   data: top6.map(c => c.male_votes),
-                  stack: 'total',
-                  barWidth: '64px',
                   itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                       { offset: 0, color: '#60a5fa' },
                       { offset: 1, color: '#3b82f6' }
                     ]),
                     borderRadius: [0, 0, 0, 0]
-                  }
+                  },
+                  label: { show: true, position: 'top' }
                 },
                 {
                   name: '女生',
                   type: 'bar',
                   data: top6.map(c => c.female_votes),
-                  stack: 'total',
-                  barWidth: '64px',
                   itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                       { offset: 0, color: '#f9a8d4' },
                       { offset: 1, color: '#ec4899' }
                     ])
-                  }
-                },
-                {
-                  name: '总数',
-                  type: 'bar',
-                  data: top6.map(c => c.male_votes + c.female_votes),
-                  stack: 'total',
-                  itemStyle: { color: 'transparent' },
-                  barWidth: '64px',
-                  label: {
-                    show: true,
-                    position: 'insideBottom',
-                    fontSize: 16,
-                    formatter: '{@[2]}', // 显示第三个系列(总数)的值
-                    color: '#000'
-                  }
+                  },
+                  label: { show: true, position: 'top' }
                 }
               ]
             })
@@ -817,8 +790,7 @@
           parseAdminParam() {
             const params = new URLSearchParams(window.location.search)
             const adminVal = params.get('isAdmin')
-            // this.isAdmin = adminVal === '6ff6acbf473abbc6'
-            this.isAdmin = true
+            this.isAdmin = adminVal === '6ff6acbf473abbc6'
           }
         },
         mounted() {

@@ -271,6 +271,10 @@ button:focus-visible {
 .bg-gray-50 {
   background-color: #f9fafb;
 }
+.bg-gray-300 {
+  color: #666 !important;
+  background-color: #d9d9d9;
+}
 .bg-gray-100 {
   background-color: #f3f4f6;
 }
@@ -279,6 +283,9 @@ button:focus-visible {
 }
 .bg-orange-100 {
   background-color: #ffedd5;
+}
+.bg-green-600 {
+  background-color: #16a34a;
 }
 .bg-red-500 {
   background-color: #ef4444;
