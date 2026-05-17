@@ -31,7 +31,7 @@
 }
 .dish-card.selected {
   border-color: #ff5600 !important;
-  background-color: #fff7f2;
+  background-color: #f7dcca;
 }
 
 .analysis-panel {
@@ -42,17 +42,33 @@
 }
 
 /* 实验区专用响应式 */
-@media screen and (max-width: 1440px) {
-  .analysis-panel { width: 270px; }
-  .dish-card { min-width: 100px; }
-}
+/* @media screen and (max-width: 1440px) {
+  .analysis-panel {
+    width: 270px;
+  }
+  .dish-card {
+    min-width: 100px;
+  }
+} */
 @media screen and (max-width: 1280px) {
-  .dish-grid { gap: 0.6rem; }
-  .dish-card { padding: 0.6rem !important; }
-  .dish-card h3 { font-size: 0.85rem !important; }
-  .dish-card p { font-size: 0.7rem !important; }
+  .dish-grid {
+    gap: 0.6rem;
+  }
+  .dish-card {
+    padding: 0.6rem !important;
+  }
+  .dish-card h3 {
+    font-size: 0.85rem !important;
+  }
+  .dish-card p {
+    font-size: 0.7rem !important;
+  }
 }
-@media screen and (max-width: 1024px) {
-  .dish-list-container { padding: 1rem; }
-  .analysis-panel { width: 250px; }
-}
+/* @media screen and (max-width: 1024px) {
+  .dish-list-container {
+    padding: 1rem;
+  }
+  .analysis-panel {
+    width: 250px;
+  }
+} */

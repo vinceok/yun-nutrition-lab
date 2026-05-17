@@ -12,7 +12,7 @@
   overflow-y: auto;
 }
 
-.stats-top6-container {
+.stats-top5-container {
   width: 300px;
   flex-shrink: 0;
   padding: 1rem;
@@ -31,24 +31,37 @@
 
 .vote-card {
   padding: 0.8rem !important;
+  transition: all 0.3s;
 }
-.vote-card-title {
+.vote-card:hover {
+  box-shadow: 0 0 12px 2px rgba(0, 0, 0, 0.2);
+}
+.vote-card-index {
   font-size: 1rem !important;
   margin-bottom: 0.5rem !important;
+  padding: 4px 12px;
+  color: #fff;
+  background-color: #333;
+  width: fit-content;
+  border-radius: 100px;
+}
+.vote-card-title {
+  font-size: 1.1rem !important;
+  margin-bottom: 0.75rem !important;
 }
 .vote-card-info {
-  font-size: 0.9rem !important;
-  margin-bottom: 0.5rem !important;
+  font-size: 1.1rem !important;
+  margin-bottom: 0.75rem !important;
 }
 .vote-btn {
   padding: 0.4rem 0.2rem !important;
-  font-size: 0.75rem !important;
+  font-size: 0.9rem !important;
   background-color: transparent;
 }
 
 .history-card {
   background: white;
-  border-radius: 0.8rem;
+  border-radius: 0.75rem;
   padding: 0.5rem;
   border: 1px solid #eee;
   box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.05);
@@ -60,31 +73,32 @@
 }
 
 /* 统计区专用响应式 */
-@media screen and (max-width: 1440px) {
-  .stats-top6-container {
+/* @media screen and (max-width: 1440px) {
+  .stats-top5-container {
     width: 280px;
   }
-}
+} */
 @media screen and (max-width: 1280px) {
   .vote-card-grid {
     gap: 0.5rem;
+    grid-template-columns: repeat(2, 1fr);
   }
   .vote-card {
     padding: 0.6rem !important;
   }
+  .vote-card-index {
+    margin-right: 4px;
+    font-size: 0.8rem !important;
+  }
   .vote-card-title {
-    font-size: 0.7rem !important;
+    margin-bottom: 4px !important;
   }
   .vote-card-info {
-    font-size: 0.6rem !important;
-  }
-  .vote-btn {
-    padding: 0.3rem 0.15rem !important;
-    font-size: 0.6rem !important;
+    margin-bottom: 8px !important;
   }
 }
-@media screen and (max-width: 1024px) {
-  .stats-top6-container {
+/* @media screen and (max-width: 1024px) {
+  .stats-top5-container {
     width: 260px;
   }
   .vote-card-grid {
@@ -103,4 +117,4 @@
     padding: 0.25rem 0.1rem !important;
     font-size: 0.55rem !important;
   }
-}
+} */

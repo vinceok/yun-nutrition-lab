@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" style="font-size: 16px">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -8,6 +8,7 @@
     <title>营养午餐实验室 - 健康配餐</title>
     <!-- 样式拆分引入 -->
     <link rel="stylesheet" href="./style/base.css" />
+    <link rel="stylesheet" href="./style/toast.css" />
     <link rel="stylesheet" href="./style/lab.css" />
     <link rel="stylesheet" href="./style/stats.css" />
     <!-- 第三方库 -->
@@ -18,6 +19,7 @@
   </head>
   <body>
     <div id="app">
+      <div class="toast-container" id="toastContainer"></div>
       <!-- 顶部导航 -->
       <header class="glass-nav border-b border-gray-200 sticky top-0 z-50">
         <div class="mx-auto flex justify-between items-center header-container">
@@ -50,24 +52,24 @@
               class="clickable-btn px-3 py-1 rounded-full bg-primary text-white transition-colors text-sm font-bold flex items-center gap-1 header-btn">
               查看统计
             </button>
-            <div class="flex items-end health-target">
-              <span
-                class="text-xs font-bold text-primary uppercase tracking-widest"
-                >健康目标：</span
-              >
-              <span class="text-xs font-medium"
-                >热量 ≥ 2926kJ | 脂肪 ≤ 50g</span
-              >
-            </div>
             <!-- 重置实验按钮 - 仅管理员可见 -->
-            <button
+            <!-- <button
               v-if="isAdmin"
               @click="resetAll"
               :disabled="resetLoading"
               class="clickable-btn px-3 py-1 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-1 header-btn"
               :class="{ 'opacity-50 cursor-not-allowed': resetLoading }">
               ↻ {{ resetLoading ? '重置中...' : '重置实验' }}
-            </button>
+            </button> -->
+            <div class="flex items-end health-target">
+              <span
+                class="text-sm font-bold text-primary uppercase tracking-widest"
+                >健康目标：</span
+              >
+              <span class="text-sm font-medium"
+                >热量 ≥ 2926kJ | 脂肪 ≤ 50g</span
+              >
+            </div>
           </div>
         </div>
       </header>
@@ -96,7 +98,7 @@
         <section class="dish-list-container custom-scrollbar">
           <div class="w-full">
             <div class="flex items-center justify-between mb-3">
-              <h2 class="text-lg font-bold flex items-center gap-2">
+              <h2 class="text-base font-bold flex items-center gap-2">
                 <span
                   class="w-7 h-7 rounded-full bg-orange-100 text-primary flex items-center justify-center text-xs"
                   >01</span
@@ -114,15 +116,15 @@
                 @click="toggleDish(dish.id)"
                 :class="['dish-card bg-white rounded-2xl cursor-pointer border-2 shadow-sm', selected.includes(dish.id) ? 'selected border-primary' : 'border-transparent']">
                 <div
-                  class="aspect-[1/1] rounded-xl overflow-hidden mb-2 bg-gray-50">
+                  class="aspect-[1/1] rounded-xl overflow-hidden mb-4 bg-gray-50">
                   <img
                     :src="dish.img"
                     class="w-full h-full object-cover"
                     :alt="dish.name" />
                 </div>
                 <div>
-                  <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-sm mb-1 flex items-center">
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-bold text-md flex items-center">
                       <span
                         class="dot"
                         style="
@@ -140,16 +142,16 @@
                       >
                       {{ dish.name.substring(1, dish.name.length) }}
                     </h3>
-                    <div
-                      class="w-6 h-6 rounded-full border-2 border-gray-100 flex items-center justify-center transition-all">
-                      <div
-                        :class="['w-2.5 h-2.5 bg-primary rounded-full transition-transform', selected.includes(dish.id) ? '' : 'scale-0']"
-                        :style="{ transform: selected.includes(dish.id) ? 'scale(1)' : 'scale(0)' }"></div>
-                    </div>
                   </div>
-                  <p class="text-[14px] text-secondary font-medium">
+                  <p class="text-md text-secondary font-medium">
                     🔥{{ dish.energy }}kJ · 🥩{{ dish.fat }}g
                   </p>
+                  <!-- <div
+                    class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center transition-all mt-2">
+                    <div
+                      :class="['w-2.5 h-2.5 bg-primary rounded-full transition-transform', selected.includes(dish.id) ? '' : 'scale-0']"
+                      :style="{ transform: selected.includes(dish.id) ? 'scale(1)' : 'scale(0)' }"></div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -158,7 +160,7 @@
         <!-- 右侧营养分析面板 -->
         <aside
           class="analysis-panel bg-white border-l border-gray-100 shadow-2xl flex flex-col">
-          <div class="p-3 flex-1 overflow-y-auto custom-scrollbar">
+          <div class="p-4 flex-1 overflow-y-auto custom-scrollbar">
             <h2 class="text-base font-bold flex items-center gap-2 mb-3">
               <span
                 class="w-6 h-6 rounded-full bg-orange-100 text-primary flex items-center justify-center text-xs"
@@ -167,10 +169,26 @@
               实时营养分析
             </h2>
             <div class="mb-5">
-              <label
-                class="text-xs font-bold text-secondary uppercase tracking-widest mb-2 block"
-                >我的午餐组合</label
-              >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 8px;
+                ">
+                <label
+                  class="text-xs font-bold text-secondary uppercase tracking-widest mb-2 block"
+                  >我的午餐组合</label
+                >
+                <button
+                  @click="clearCombination"
+                  :disabled="selected.length === 0"
+                  :class="['py-2.5 rounded-lg text-white round-full font-bold transition-all shadow-lg clickable-btn bg-primary']"
+                  style="width: 72px; height: 32px">
+                  清空
+                </button>
+              </div>
+
               <div class="space-y-2">
                 <div
                   v-if="selected.length === 0"
@@ -194,7 +212,7 @@
             <div class="space-y-3">
               <div>
                 <div class="flex justify-between items-end mb-1">
-                  <span class="text-xs font-bold text-secondary"
+                  <span class="text-sm font-bold text-secondary"
                     >🔥 总热量 (kJ)</span
                   >
                   <span class="text-xl font-black text-primary"
@@ -212,13 +230,13 @@
                     title="目标线: 2926"></div>
                 </div>
                 <div
-                  class="flex justify-between text-xs font-bold text-gray-400 mt-1 uppercase tracking-tighter">
+                  class="flex justify-between text-sm font-bold text-gray-400 mt-1 uppercase tracking-tighter">
                   <span>0</span><span>目标: 2926</span>
                 </div>
               </div>
               <div>
                 <div class="flex justify-between items-end mb-1">
-                  <span class="text-xs font-bold text-secondary"
+                  <span class="text-sm font-bold text-secondary"
                     >🥩 总脂肪 (g)</span
                   >
                   <span class="text-xl font-black text-primary"
@@ -236,18 +254,25 @@
                     title="上限线: 50"></div>
                 </div>
                 <div
-                  class="flex justify-between text-xs font-bold text-gray-400 mt-1 uppercase tracking-tighter">
+                  class="flex justify-between text-sm font-bold text-gray-400 mt-1 uppercase tracking-tighter">
                   <span>0</span><span>上限: 50</span>
                 </div>
               </div>
             </div>
             <div class="mt-3" style="padding-top: 24px">
+              <!-- <button
+                @click="saveCombination"
+                :disabled="!canSave"
+                :class="['w-full py-2.5 rounded-xl bg-primary text-white font-bold transition-all shadow-lg clickable-btn', canSave ? 'btn-pulse' : 'opacity-50 cursor-not-allowed']">
+                保存为候选方案
+              </button> -->
               <button
-                :class="['w-full py-2.5 rounded-xl text-white font-bold transition-all shadow-lg clickable-btn', saveBtnClass]">
+                :disabled="!canSave"
+                :class="['w-full py-2.5 mb-4 rounded-lg text-white font-bold transition-all shadow-lg clickable-btn', saveBtnClass]">
                 {{saveBtnText}}
               </button>
             </div>
-            <div class="mt-4">
+            <!-- <div class="mt-4">
               <label
                 class="text-xs font-bold text-secondary uppercase tracking-widest mb-2 block"
                 >实验记录与判断</label
@@ -257,20 +282,20 @@
                 <p v-for="(log, idx) in historyLog" :key="idx">• {{ log }}</p>
                 <p v-if="historyLog.length === 0">• 实验已重置</p>
               </div>
-            </div>
+            </div> -->
           </div>
-          <div class="p-3 bg-orange-50 border-t border-orange-100">
+          <div class="p-4 bg-orange-50 border-orange-100">
             <div class="flex gap-2">
               <div
                 class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-lg">
                 🤖
               </div>
               <div class="flex-1">
-                <h4 class="font-bold text-orange-900 text-xs mb-1">
+                <h4 class="font-bold text-orange-900 text-md mb-1">
                   AI 营养师建议
                 </h4>
                 <p
-                  class="text-xs text-orange-800/80 leading-relaxed"
+                  class="text-sm text-orange-800/80 leading-relaxed"
                   v-html="aiFeedback"></p>
               </div>
             </div>
@@ -296,22 +321,25 @@
               class="flex-1 bg-white rounded-2xl p-3 shadow-sm border border-gray-100 overflow-y-auto">
               <div class="vote-card-grid" v-if="candidates.length">
                 <div
-                  v-for="c in candidates"
+                  v-for="(c,index) in candidates"
                   :key="c.id"
                   class="vote-card bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div class="vote-card-title font-bold text-gray-800">
+                    <span class="vote-card-index font-bold text-gray-800">
+                      方案 {{ index+1}}
+                    </span>
                     {{ c.names }}
                   </div>
                   <div
                     class="vote-card-info text-secondary flex justify-between align-center">
                     <span>🔥 {{ c.energy }}kJ · 🥩 {{ c.fat }}g</span>
                     <!-- 删除按钮 - 仅管理员可见 -->
-                    <button
+                    <!-- <button
                       v-if="isAdmin"
                       @click="removeCandidate(c.id)"
-                      class="py-0.5 px-1 bg-red-500 text-white rounded-md font-bold hover:bg-red-600 transition-all shadow-sm clickable-btn">
+                      class="py-0.5 px-4 bg-red-500 text-white rounded-md font-bold hover:bg-red-600 transition-all shadow-sm clickable-btn">
                       删除
-                    </button>
+                    </button> -->
                   </div>
                   <div class="flex gap-1">
                     <button
@@ -339,13 +367,13 @@
             </div>
           </div>
         </section>
-        <aside class="stats-top6-container custom-scrollbar">
+        <aside class="stats-top5-container custom-scrollbar">
           <h2 class="text-base font-bold flex items-center gap-2 mb-3">
             <span
               class="w-6 h-6 rounded-full bg-orange-100 text-primary flex items-center justify-center text-xs"
               >04</span
             >
-            Top6的搭配方案
+            Top5的搭配方案
           </h2>
           <div
             v-if="loading && !silentPolling"
@@ -353,25 +381,25 @@
             加载中...
           </div>
           <div
-            v-else-if="topSixCandidates.length === 0"
+            v-else-if="topFiveCandidates.length === 0"
             class="py-10 text-center text-gray-300">
             <p class="text-xs">还没有候选方案哦</p>
           </div>
-          <div v-for="c in topSixCandidates" :key="c.id" class="history-card">
-            <div class="mb-1">
-              <span class="font-bold text-xs pr-2 text-gray-800"
+          <div v-for="c in topFiveCandidates" :key="c.id" class="history-card">
+            <div class="mb-2">
+              <span class="font-bold text-md pr-2 text-gray-800"
                 >{{ c.names }}</span
               >
             </div>
-            <div class="flex justify-between items-center text-xs mb-1">
+            <div class="flex justify-between items-center text-md mb-2">
               <span class="text-secondary"
                 >🔥 {{ c.energy }}kJ · 🥩 {{ c.fat }}g</span
               ><span class="text-green-600 font-bold">达标</span>
             </div>
-            <div class="flex justify-between text-xs">
-              <span>♂男生喜欢 {{ c.male_votes }}</span
-              ><span>♀女生喜欢 {{ c.female_votes }}</span
-              ><span class="font-bold">总计: {{ c.total_votes }}</span>
+            <div class="flex justify-between text-sm">
+              <span class="">♂男生喜欢 {{ c.male_votes }}</span
+              ><span class="">♀女生喜欢 {{ c.female_votes }}</span
+              ><span class="font-bold1">总计: {{ c.total_votes }}</span>
             </div>
           </div>
         </aside>
@@ -542,11 +570,11 @@
               return "<span style='color:#ea580c;font-weight:bold;'>⚠️ 能量不足。</span> 建议增加一些主食或肉类。"
             return "<span style='color:#dc2626;font-weight:bold;'>⚠️ 脂肪偏高。</span> 试着把油炸或肥肉菜品换成鱼类或蔬菜吧！"
           },
-          topSixCandidates() {
+          topFiveCandidates() {
             return this.candidates
               .map(c => ({ ...c, total_votes: c.male_votes + c.female_votes }))
               .sort((a, b) => b.total_votes - a.total_votes)
-              .slice(0, 6)
+              .slice(0, 5)
           }
         },
         watch: {
@@ -560,7 +588,7 @@
           candidates: {
             deep: true,
             handler() {
-              this.$nextTick(() => this.updateStatsChart?.())
+              this.$nextTick(() => this.updateStatsChart())
             }
           },
           currentTab(newTab) {
@@ -602,17 +630,25 @@
                 energy: t.energy,
                 fat: t.fat
               })
-              alert('方案已保存！可前往"统计区"查看并投票。')
+              this.showToast(
+                '方案已保存！可前往"统计区"查看并投票。',
+                'success'
+              )
               await this.fetchCandidates(false)
               this.selected = []
               this.historyLog = []
             } catch (err) {
-              alert(
+              this.showToast(
                 err.response?.status === 409
                   ? '该方案已在候选名单中！'
-                  : '保存失败'
+                  : '保存失败',
+                'error'
               )
             }
+          },
+          clearCombination() {
+            console.log('clearCombination')
+            this.selected = []
           },
           async voteFor(candidateId, gender) {
             try {
@@ -684,8 +720,8 @@
           },
           updateStatsChart() {
             if (!this.statsChartInstance) return
-            const top6 = this.topSixCandidates
-            if (!top6.length) {
+            const top5 = this.topFiveCandidates
+            if (!top5.length) {
               this.statsChartInstance.clear()
               return
             }
@@ -701,9 +737,11 @@
               },
               xAxis: {
                 type: 'category',
-                data: top6.map(c => c.names),
+                data: top5.map(c => c.names),
                 axisLabel: {
-                  fontSize: 12,
+                  fontSize: 18,
+                  lineHeight: 24,
+                  interval: 0,
                   formatter: val => val.replace(/\+/g, '+\n') // 在每个+号后添加换行符
                 }
               },
@@ -712,7 +750,9 @@
                 {
                   name: '男生',
                   type: 'bar',
-                  data: top6.map(c => c.male_votes),
+                  data: top5.map(c => c.male_votes),
+                  stack: 'total',
+                  barWidth: '64px',
                   itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                       { offset: 0, color: '#60a5fa' },
@@ -720,19 +760,48 @@
                     ]),
                     borderRadius: [0, 0, 0, 0]
                   },
-                  label: { show: true, position: 'top' }
+                  label: {
+                    show: true,
+                    position: 'inside',
+                    fontSize: 18,
+                    formatter: '{@[0]}', // 显示第三个系列(总数)的值
+                    color: '#fff'
+                  }
                 },
                 {
                   name: '女生',
                   type: 'bar',
-                  data: top6.map(c => c.female_votes),
+                  data: top5.map(c => c.female_votes),
+                  stack: 'total',
+                  barWidth: '64px',
                   itemStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                       { offset: 0, color: '#f9a8d4' },
                       { offset: 1, color: '#ec4899' }
                     ])
                   },
-                  label: { show: true, position: 'top' }
+                  label: {
+                    show: true,
+                    position: 'inside',
+                    fontSize: 18,
+                    formatter: '{@[1]}', // 显示第三个系列(总数)的值
+                    color: '#fff'
+                  }
+                },
+                {
+                  name: '总数',
+                  type: 'bar',
+                  data: top5.map(c => c.male_votes + c.female_votes),
+                  stack: 'total',
+                  itemStyle: { color: 'transparent' },
+                  barWidth: '64px',
+                  label: {
+                    show: true,
+                    position: 'insideBottom',
+                    fontSize: 18,
+                    formatter: '{@[2]}', // 显示第三个系列(总数)的值
+                    color: '#000'
+                  }
                 }
               ]
             })
@@ -784,13 +853,36 @@
             if (this.selected.includes(id))
               this.selected = this.selected.filter(d => d !== id)
             else if (this.selected.length < 3) this.selected.push(id)
-            else alert('最多只能选择3道菜哦！')
+            else this.showToast('最多只能选择3道菜哦！', 'warning')
           },
           // 解析URL参数
           parseAdminParam() {
             const params = new URLSearchParams(window.location.search)
             const adminVal = params.get('isAdmin')
-            this.isAdmin = adminVal === '6ff6acbf473abbc6'
+            // this.isAdmin = adminVal === '6ff6acbf473abbc6'
+            this.isAdmin = true
+          },
+          // 添加显示Toast的方法
+          showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer')
+            const toast = document.createElement('div')
+            toast.className = `toast ${type}`
+            toast.innerHTML = `<span>${message}</span>`
+            toastContainer.appendChild(toast)
+
+            // 3秒后开始移除流程
+            setTimeout(() => {
+              // 添加淡出效果而不是滑出效果，避免闪烁
+              toast.style.opacity = '0'
+              toast.style.transform = 'translateX(100%)'
+
+              // 动画结束后再从DOM中移除
+              setTimeout(() => {
+                if (toast.parentNode) {
+                  toast.parentNode.removeChild(toast)
+                }
+              }, 300) // 与CSS过渡时间匹配
+            }, 3000)
           }
         },
         mounted() {

@@ -213,6 +213,12 @@ button:focus-visible {
 .mt-1 {
   margin-top: 0.25rem;
 }
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mt-3 {
+  margin-top: 0.75rem;
+}
 .mt-4 {
   margin-top: 1rem;
 }
@@ -224,6 +230,9 @@ button:focus-visible {
 }
 .mb-3 {
   margin-bottom: 0.75rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
 }
 .mb-5 {
   margin-bottom: 1.25rem;
@@ -237,9 +246,24 @@ button:focus-visible {
 .p-3 {
   padding: 0.75rem;
 }
+.p-4 {
+  padding: 1rem;
+}
+.px-3 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
 .px-3 {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
+}
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 .py-1 {
   padding-top: 0.25rem;
@@ -382,8 +406,12 @@ button:focus-visible {
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
-.text-base {
+.text-md {
   font-size: 1rem;
+  line-height: 1.5rem;
+}
+.text-base {
+  font-size: 1.5rem;
   line-height: 1.5rem;
 }
 .text-lg {
@@ -461,6 +489,12 @@ button:focus-visible {
 }
 .text-orange-900 {
   color: #7c2d12;
+}
+.border-red-500 {
+  border-color: #ef4444;
+}
+.text-red {
+  color: #ef4444;
 }
 
 .relative {
@@ -584,8 +618,8 @@ button:focus-visible {
   background: white;
   border-radius: 1rem;
   width: 100%;
-  max-width: 800px;
-  max-height: 85vh;
+  max-width: 960px;
+  max-height: 92vh;
   overflow-y: auto;
   padding: 1.5rem;
   position: relative;
@@ -610,7 +644,7 @@ button:focus-visible {
   color: #777;
 }
 .chart-container {
-  height: 400px;
+  height: 560px;
   width: 100%;
 }
 
@@ -635,11 +669,11 @@ button:focus-visible {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 1.5rem;
   flex-shrink: 0;
 }
 .header-btn {
-  padding: 0.4rem 0.8rem !important;
+  padding: 0.4rem 1.6rem !important;
   font-size: 0.8rem !important;
 }
 .health-target {
@@ -648,7 +682,7 @@ button:focus-visible {
 }
 
 /* 全局响应式调整 (影响布局宽度等) */
-@media screen and (max-width: 1440px) {
+/* @media screen and (max-width: 1440px) {
   .chart-container {
     height: 350px;
   }
@@ -662,4 +696,4 @@ button:focus-visible {
     padding: 0.35rem 0.7rem !important;
     font-size: 0.75rem !important;
   }
-}
+} */

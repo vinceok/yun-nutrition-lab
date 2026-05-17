@@ -1,0 +1,56 @@
+.toast-container {
+  position: fixed;
+  top: 5px;
+  left: 200px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 12px 24px;
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 8px;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  /* 添加平滑过渡效果 */
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out;
+}
+
+.toast.success {
+  background-color: #22c55e;
+}
+
+.toast.error {
+  background-color: #ef4444;
+}
+
+.toast.warning {
+  background-color: #f59e0b;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
