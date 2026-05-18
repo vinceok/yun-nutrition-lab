@@ -609,13 +609,15 @@
               this.candidates = res.data || []
             } catch (err) {
               console.error(err)
-              if (!silent) alert('网络错误')
+              if (!silent) this.showToast('网络异常', 'error')
             } finally {
               if (!silent) this.loading = false
             }
           },
           async saveCombination() {
             if (!this.canSave) return
+            if (this.candidates.length >= 7)
+              return this.showToast('最多只能保存7种搭配！', 'error')
             const selectedDishes = this.selectedDishes,
               names = selectedDishes.map(d => d.name).join('+'),
               dish_ids = selectedDishes
@@ -658,7 +660,7 @@
               })
               await this.fetchCandidates(true)
             } catch (err) {
-              alert('投票失败')
+              this.showToast('投票失败', 'error')
             }
           },
           async removeCandidate(candidateId) {
@@ -668,7 +670,7 @@
               await axios.delete(`${API_BASE}/candidates/${candidateId}`)
               await this.fetchCandidates(false)
             } catch (err) {
-              alert('删除失败')
+              this.showToast('删除失败', 'error')
             }
           },
           startPollingStats() {
@@ -720,8 +722,8 @@
           },
           updateStatsChart() {
             if (!this.statsChartInstance) return
-            const top5 = this.topFiveCandidates
-            if (!top5.length) {
+            const top7 = this.candidates
+            if (!top7.length) {
               this.statsChartInstance.clear()
               return
             }
@@ -737,7 +739,7 @@
               },
               xAxis: {
                 type: 'category',
-                data: top5.map(c => c.names),
+                data: top7.map(c => c.names),
                 axisLabel: {
                   fontSize: 18,
                   lineHeight: 24,
@@ -750,7 +752,7 @@
                 {
                   name: '男生',
                   type: 'bar',
-                  data: top5.map(c => c.male_votes),
+                  data: top7.map(c => c.male_votes),
                   stack: 'total',
                   barWidth: '64px',
                   itemStyle: {
@@ -771,7 +773,7 @@
                 {
                   name: '女生',
                   type: 'bar',
-                  data: top5.map(c => c.female_votes),
+                  data: top7.map(c => c.female_votes),
                   stack: 'total',
                   barWidth: '64px',
                   itemStyle: {
@@ -791,7 +793,7 @@
                 {
                   name: '总数',
                   type: 'bar',
-                  data: top5.map(c => c.male_votes + c.female_votes),
+                  data: top7.map(c => c.male_votes + c.female_votes),
                   stack: 'total',
                   itemStyle: { color: 'transparent' },
                   barWidth: '64px',
@@ -820,9 +822,9 @@
               this.selected = []
               this.historyLog = []
               await this.fetchCandidates(false)
-              alert('实验已重置成功！')
+              this.showToast('实验已重置成功！', 'success')
             } catch (err) {
-              alert('重置失败')
+              this.showToast('重置失败', 'error')
             } finally {
               this.resetLoading = false
             }

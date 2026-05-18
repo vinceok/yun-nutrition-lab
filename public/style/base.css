@@ -618,7 +618,7 @@ button:focus-visible {
   background: white;
   border-radius: 1rem;
   width: 100%;
-  max-width: 960px;
+  max-width: 1080px;
   max-height: 92vh;
   overflow-y: auto;
   padding: 1.5rem;
@@ -686,14 +686,9 @@ button:focus-visible {
   .chart-container {
     height: 350px;
   }
-}
-@media screen and (max-width: 1024px) {
-  .modal-content {
-    padding: 1.2rem;
-    max-height: 90vh;
-  }
-  .header-btn {
-    padding: 0.35rem 0.7rem !important;
-    font-size: 0.75rem !important;
-  }
 } */
+@media screen and (max-width: 1280px) {
+  .modal-content {
+    max-width: 960px;
+  }
+}
