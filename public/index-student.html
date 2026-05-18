@@ -425,7 +425,7 @@
           chartInstance: null,
           statsChartInstance: null,
           showStatsModal: false,
-          pollIntervalMs: 2000,
+          pollIntervalMs: 10 * 1000,
           pollingTimer: null,
           silentPolling: false,
           isAdmin: false, // 管理员标志
@@ -654,18 +654,40 @@
           clearCombination() {
             this.selected = []
           },
-          // 在投票方法中添加票数限制检查
+          // 修改voteFor方法，限制每种方案和总体票数
           async voteFor(candidateId, gender) {
-            // 计算当前性别总票数
+            // 获取当前候选方案
+            const candidate = this.candidates.find(c => c.id === candidateId)
+
+            if (!candidate) {
+              this.showToast('找不到对应方案', 'error')
+              return
+            }
+
+            // 检查该方案对应性别的投票数是否已达到单方案上限
+            if (gender === 'male' && candidate.male_votes >= 26) {
+              this.showToast('该方案男生投票已达上限（26票）！', 'error')
+              return
+            }
+
+            if (gender === 'female' && candidate.female_votes >= 19) {
+              this.showToast('该方案女生投票已达上限（19票）！', 'error')
+              return
+            }
+
+            // 计算当前性别总票数（全局）
             let currentTotalVotes = 0
             if (gender === 'male') {
               currentTotalVotes = this.candidates.reduce(
                 (sum, candidate) => sum + candidate.male_votes,
                 0
               )
-              // 如果加上这一票会超过限制，则阻止投票
+              // 如果加上这一票会超过总体限制，则阻止投票
               if (currentTotalVotes >= 26 * 5) {
-                this.showToast('男生投票已达上限，无法继续投票！', 'error')
+                this.showToast(
+                  '男生总投票数已达上限（130票），无法继续投票！',
+                  'error'
+                )
                 return
               }
             } else if (gender === 'female') {
@@ -674,7 +696,10 @@
                 0
               )
               if (currentTotalVotes >= 19 * 5) {
-                this.showToast('女生投票已达上限，无法继续投票！', 'error')
+                this.showToast(
+                  '女生总投票数已达上限（95票），无法继续投票！',
+                  'error'
+                )
                 return
               }
             }
@@ -685,6 +710,10 @@
                 gender
               })
               await this.fetchCandidates(true)
+              // this.showToast(
+              //   `已为该方案投${gender === 'male' ? '男生' : '女生'}票！`,
+              //   'success'
+              // )
             } catch (err) {
               this.showToast('投票失败', 'error')
             }
