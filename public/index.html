@@ -655,7 +655,31 @@
           clearCombination() {
             this.selected = []
           },
+          // 在投票方法中添加票数限制检查
           async voteFor(candidateId, gender) {
+            // 计算当前性别总票数
+            let currentTotalVotes = 0
+            if (gender === 'male') {
+              currentTotalVotes = this.candidates.reduce(
+                (sum, candidate) => sum + candidate.male_votes,
+                0
+              )
+              // 如果加上这一票会超过限制，则阻止投票
+              if (currentTotalVotes >= 26 * 5) {
+                this.showToast('男生投票已达上限，无法继续投票！', 'error')
+                return
+              }
+            } else if (gender === 'female') {
+              currentTotalVotes = this.candidates.reduce(
+                (sum, candidate) => sum + candidate.female_votes,
+                0
+              )
+              if (currentTotalVotes >= 19 * 5) {
+                this.showToast('女生投票已达上限，无法继续投票！', 'error')
+                return
+              }
+            }
+
             try {
               await axios.post(`${API_BASE}/vote`, {
                 candidate_id: candidateId,
