@@ -159,7 +159,8 @@
         </section>
         <!-- 右侧营养分析面板 -->
         <aside
-          class="analysis-panel bg-white border-l border-gray-100 shadow-2xl flex flex-col">
+          class="analysis-panel bg-white border-l border-gray-100 shadow-2xl flex flex-col"
+          style="position: relative">
           <div class="p-4 flex-1 overflow-y-auto custom-scrollbar">
             <h2 class="text-base font-bold flex items-center gap-2 mb-3">
               <span
@@ -285,7 +286,9 @@
               </div>
             </div> -->
           </div>
-          <div class="p-4 bg-orange-50 border-orange-100">
+          <div
+            class="p-4 bg-orange-50 border-orange-100"
+            style="position: absolute; bottom: 0; left: 0; width: 100%">
             <div class="flex gap-2">
               <div
                 class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-lg">
@@ -650,7 +653,6 @@
             }
           },
           clearCombination() {
-            console.log('clearCombination')
             this.selected = []
           },
           async voteFor(candidateId, gender) {
