@@ -504,7 +504,8 @@
               img: './images/韭菜炒豆芽.png'
             }
           ],
-          TARGET: { energy: 2926, fat: 50 }
+          TARGET: { energy: 2926, fat: 50 },
+          votingStatus: {}
         },
         computed: {
           saveBtnText() {
@@ -657,66 +658,81 @@
           },
           // 修改voteFor方法，限制每种方案和总体票数
           async voteFor(candidateId, gender) {
-            // 获取当前候选方案
-            const candidate = this.candidates.find(c => c.id === candidateId)
+            const voteKey = `${candidateId}_${gender}`
 
-            if (!candidate) {
-              this.showToast('找不到对应方案', 'error')
-              return
+            // 检查是否已经在投票过程中
+            if (this.votingStatus[voteKey]) {
+              return // 或者可以提示用户正在投票中
             }
 
-            // 检查该方案对应性别的投票数是否已达到单方案上限
-            if (gender === 'male' && candidate.male_votes >= 26) {
-              this.showToast('该方案男生投票已达上限（26票）！', 'error')
-              return
-            }
-
-            if (gender === 'female' && candidate.female_votes >= 19) {
-              this.showToast('该方案女生投票已达上限（19票）！', 'error')
-              return
-            }
-
-            // 计算当前性别总票数（全局）
-            let currentTotalVotes = 0
-            if (gender === 'male') {
-              currentTotalVotes = this.candidates.reduce(
-                (sum, candidate) => sum + candidate.male_votes,
-                0
-              )
-              // 如果加上这一票会超过总体限制，则阻止投票
-              if (currentTotalVotes >= 26 * 5) {
-                this.showToast(
-                  '男生总投票数已达上限（130票），无法继续投票！',
-                  'error'
-                )
-                return
-              }
-            } else if (gender === 'female') {
-              currentTotalVotes = this.candidates.reduce(
-                (sum, candidate) => sum + candidate.female_votes,
-                0
-              )
-              if (currentTotalVotes >= 19 * 5) {
-                this.showToast(
-                  '女生总投票数已达上限（95票），无法继续投票！',
-                  'error'
-                )
-                return
-              }
-            }
+            // 设置投票状态为进行中
+            this.$set(this.votingStatus, voteKey, true)
 
             try {
+              // 获取当前候选方案
+              const candidate = this.candidates.find(c => c.id === candidateId)
+
+              if (!candidate) {
+                this.showToast('找不到对应方案', 'error')
+                return
+              }
+
+              // 检查该方案对应性别的投票数是否已达到单方案上限
+              if (gender === 'male' && candidate.male_votes >= 26) {
+                this.showToast('该方案男生投票已达上限（26票）！', 'error')
+                return
+              }
+
+              if (gender === 'female' && candidate.female_votes >= 19) {
+                this.showToast('该方案女生投票已达上限（19票）！', 'error')
+                return
+              }
+
+              // 计算当前性别总票数（全局）
+              let currentTotalVotes = 0
+              if (gender === 'male') {
+                currentTotalVotes = this.candidates.reduce(
+                  (sum, candidate) => sum + candidate.male_votes,
+                  0
+                )
+                // 如果加上这一票会超过总体限制，则阻止投票
+                if (currentTotalVotes >= 26 * 5) {
+                  this.showToast(
+                    '男生总投票数已达上限（130票），无法继续投票！',
+                    'error'
+                  )
+                  return
+                }
+              } else if (gender === 'female') {
+                currentTotalVotes = this.candidates.reduce(
+                  (sum, candidate) => sum + candidate.female_votes,
+                  0
+                )
+                if (currentTotalVotes >= 19 * 5) {
+                  this.showToast(
+                    '女生总投票数已达上限（95票），无法继续投票！',
+                    'error'
+                  )
+                  return
+                }
+              }
+
+              // 发送投票请求
               await axios.post(`${API_BASE}/vote`, {
                 candidate_id: candidateId,
                 gender
               })
+
+              // 请求候选人列表数据
               await this.fetchCandidates(true)
-              // this.showToast(
-              //   `已为该方案投${gender === 'male' ? '男生' : '女生'}票！`,
-              //   'success'
-              // )
+
+              // 投票成功提示（可选）
+              // this.showToast(`投票成功！`, 'success');
             } catch (err) {
               this.showToast('投票失败', 'error')
+            } finally {
+              // 无论成功或失败，都要清除投票状态
+              this.$delete(this.votingStatus, voteKey)
             }
           },
           async removeCandidate(candidateId) {
